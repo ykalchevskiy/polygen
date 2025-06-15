@@ -24,7 +24,7 @@ type ImageItem struct {
 	Height int
 }
 
-func (ImageItem) isItem() {}
+func (*ImageItem) isItem() {}
 
 func main() {
 	// Create and marshal items
@@ -33,7 +33,7 @@ func main() {
 			IsItem: TextItem{Content: "Hello, World!"},
 		},
 		{
-			IsItem: ImageItem{
+			IsItem: &ImageItem{
 				URL:    "https://example.com/image.jpg",
 				Width:  800,
 				Height: 600,
@@ -64,7 +64,7 @@ func main() {
 		switch v := item.IsItem.(type) {
 		case TextItem:
 			fmt.Printf("Got text item: %s\n", v.Content)
-		case ImageItem:
+		case *ImageItem:
 			fmt.Printf("Got image item: %dx%d at %s\n", v.Width, v.Height, v.URL)
 		}
 	}

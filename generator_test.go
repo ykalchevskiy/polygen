@@ -264,7 +264,7 @@ func TestConfig(t *testing.T) {
 
 		// Process subtypes
 		for subType, subConfig := range config.Types[0].Subtypes {
-			typeName := subType
+			var typeName string
 			if subConfig.Name != nil {
 				typeName = *subConfig.Name
 			} else {

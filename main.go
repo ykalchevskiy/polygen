@@ -56,7 +56,7 @@ func main() {
 
 		// Process subtypes
 		for subType, subConfig := range typeConfig.Subtypes {
-			typeName := subType
+			var typeName string
 			if subConfig.Name != nil {
 				typeName = *subConfig.Name
 			} else {
