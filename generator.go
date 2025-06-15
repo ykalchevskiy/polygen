@@ -68,16 +68,15 @@ func (v *{{.Type}}) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 
-	// First unmarshal to get the type
-	var raw map[string]json.RawMessage
-	if err := json.Unmarshal(data, &raw); err != nil {
-		return fmt.Errorf("unmarshaling {{.Type}} raw: %v", err)
+	// First decode just the type field
+	typeData := struct {
+		Type string ` + "`" + `json:"{{.Descriptor}}"` + "`" + `
+	}{}
+	if err := json.Unmarshal(data, &typeData); err != nil {
+		return fmt.Errorf("unmarshaling {{.Type}} type field: %v", err)
 	}
 
-	// Check and extract type field
-	typeData, exists := raw["{{.Descriptor}}"]
-	var typeName string
-	if !exists {
+	if typeData.Type == "" {
 		// If no type field and we have an existing value, decode into it
 		if v.{{.Interface}} != nil {
 			{{- if .Strict}}
@@ -90,9 +89,8 @@ func (v *{{.Type}}) UnmarshalJSON(data []byte) error {
 		}
 		return fmt.Errorf("missing {{.Descriptor}} field in JSON for {{.Type}}")
 	}
-	if err := json.Unmarshal(typeData, &typeName); err != nil {
-		return fmt.Errorf("unmarshaling {{.Type}} type value: %v", err)
-	}
+
+ 	typeName := typeData.Type
 
 	var value {{.Interface}}
 	switch typeName {

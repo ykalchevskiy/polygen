@@ -58,16 +58,15 @@ func (v *Item) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 
-	// First unmarshal to get the type
-	var raw map[string]json.RawMessage
-	if err := json.Unmarshal(data, &raw); err != nil {
-		return fmt.Errorf("unmarshaling Item raw: %v", err)
+	// First decode just the type field
+	typeData := struct {
+		Type string `json:"kind"`
+	}{}
+	if err := json.Unmarshal(data, &typeData); err != nil {
+		return fmt.Errorf("unmarshaling Item type field: %v", err)
 	}
 
-	// Check and extract type field
-	typeData, exists := raw["kind"]
-	var typeName string
-	if !exists {
+	if typeData.Type == "" {
 		// If no type field and we have an existing value, decode into it
 		if v.IsItem != nil {
 			decoder := json.NewDecoder(bytes.NewReader(data))
@@ -76,9 +75,8 @@ func (v *Item) UnmarshalJSON(data []byte) error {
 		}
 		return fmt.Errorf("missing kind field in JSON for Item")
 	}
-	if err := json.Unmarshal(typeData, &typeName); err != nil {
-		return fmt.Errorf("unmarshaling Item type value: %v", err)
-	}
+
+	typeName := typeData.Type
 
 	var value IsItem
 	switch typeName {
