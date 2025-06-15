@@ -40,7 +40,7 @@ func TestGenerator(t *testing.T) {
 		}
 
 		// Copy polygen source files
-		files := []string{"main.go", "generator.go"}
+		files := []string{"main.go", "generator.go", "config.go"}
 		for _, file := range files {
 			if err := copyFile(file, filepath.Join(tempDir, file)); err != nil {
 				t.Fatalf("failed to copy %s: %v", file, err)
@@ -78,14 +78,45 @@ func (ItemValue2) isItemValue() {}
 			t.Fatalf("failed to create source file: %v", err)
 		}
 
+		// Create .polygen.json config file
+		configFile := filepath.Join(tempDir, ".polygen.json")
+		configData := `{
+			"$schema": "https://raw.githubusercontent.com/ykalchevskiy/polygen/main/schema.json",
+			"strictByDefault": true,
+			"defaultDescriptor": "kind",
+			"types": [
+				{
+					"type": "ItemValue",
+					"interface": "IsItemValue",
+					"package": "pkg",
+					"directory": "pkg",
+					"subtypes": {
+						"ItemValue1": {
+							"name": "item-value-1"
+						},
+						"ItemValue2": {
+							"name": "item-value-2"
+						}
+					}
+				}
+			]
+		}`
+		err = os.WriteFile(configFile, []byte(configData), 0644)
+		if err != nil {
+			t.Fatalf("failed to create config file: %v", err)
+		}
+
 		// Run the generator
-		genFile := filepath.Join(pkgDir, "item_polygen.go")
-		cmd = exec.Command("go", "run", ".", "-type=ItemValue", "-interface=IsItemValue",
-			"-types=ItemValue1|item-value-1,ItemValue2|item-value-2", "-package=pkg",
-			"-descriptor=kind", "-strict", "-file="+genFile)
+		cmd = exec.Command("go", "run", ".")
 		cmd.Dir = tempDir
 		if output, err := cmd.CombinedOutput(); err != nil {
 			t.Fatalf("generator failed: %v\nOutput: %s", err, output)
+		}
+
+		// Verify generated file exists
+		genFile := filepath.Join(pkgDir, "item_value_polygen.go")
+		if _, err := os.Stat(genFile); os.IsNotExist(err) {
+			t.Fatalf("generated file does not exist: %v", err)
 		}
 
 		// Create main.go with test cases
@@ -106,7 +137,7 @@ import (
 func main() {
 	// Test value type
 	text := pkg.ItemValue{
-		IsItemValue: &pkg.ItemValue1{Value: "hello"},
+		IsItemValue: pkg.ItemValue1{Value: "hello"},
 	}
 
 	data, err := json.Marshal(text)
@@ -116,7 +147,7 @@ func main() {
 	}
 	fmt.Printf("text: %s\n", data)
 
-	// Test struct type
+	// Test struct type with pointer
 	number := pkg.ItemValue{
 		IsItemValue: &pkg.ItemValue2{Amount: 42},
 	}
@@ -176,9 +207,6 @@ func must(data []byte, err error) string {
 			t.Fatalf("test failed: %v\nOutput: %s", err, output)
 		}
 
-		// Verify output format
-		t.Logf("Test program output:\n%s", string(output))
-
 		// Define expected lines in order
 		expectedLines := []string{
 			`text: {"kind":"item-value-1","Value":"hello"}`,
@@ -209,43 +237,156 @@ func must(data []byte, err error) string {
 	})
 }
 
-// TestTemplate tests the code generation template
-func TestTemplate(t *testing.T) {
-	cfg := &Config{
-		Type:       "TestType",
-		Interface:  "TestInterface",
-		Descriptor: "type",
-		Package:    "test",
-		Types: []TypeMapping{
-			{TypeName: "sub-type-1", SubType: "SubType1", IsPointer: false},
-			{TypeName: "sub-type-2", SubType: "SubType2", IsPointer: true},
-		},
-	}
-
-	code, err := generate(cfg)
-	if err != nil {
-		t.Fatalf("generate failed: %v", err)
-	}
-
-	if code == "" {
-		t.Error("generated code is empty")
-	}
-
-	// Test required components
-	required := []string{
-		"package test",
-		"type TestType struct",
-		"func (v TestType) MarshalJSON() ([]byte, error)",
-		"func (v *TestType) UnmarshalJSON(data []byte) error",
-		"case \"sub-type-1\":",
-		"case \"sub-type-2\":",
-		"var v SubType1",
-		"var v SubType2",
-	}
-
-	for _, r := range required {
-		if !strings.Contains(code, r) {
-			t.Errorf("generated code missing required part: %q", r)
+// TestConfig tests the configuration parsing and code generation with various settings
+func TestConfig(t *testing.T) {
+	t.Run("default values", func(t *testing.T) {
+		config := FileConfig{
+			Types: []TypeConfig{
+				{
+					Type:      "TestType",
+					Interface: "TestInterface",
+					Package:   "test",
+					Subtypes: map[string]SubtypeConfig{
+						"SubType1": {},
+						"SubType2": {Pointer: true},
+					},
+				},
+			},
 		}
-	}
+
+		// Convert first type config to internal format
+		cfg := &Config{
+			Type:       config.Types[0].Type,
+			Interface:  config.Types[0].Interface,
+			Package:    config.Types[0].Package,
+			Descriptor: "type", // Default descriptor
+		}
+
+		// Process subtypes
+		for subType, subConfig := range config.Types[0].Subtypes {
+			typeName := subType
+			if subConfig.Name != nil {
+				typeName = *subConfig.Name
+			} else {
+				typeName = toKebabCase(subType)
+			}
+			cfg.Types = append(cfg.Types, TypeMapping{
+				SubType:   subType,
+				TypeName:  typeName,
+				IsPointer: subConfig.Pointer,
+			})
+		}
+
+		// Generate code
+		code, err := generate(cfg)
+		if err != nil {
+			t.Fatalf("generate failed: %v", err)
+		}
+
+		if code == "" {
+			t.Error("generated code is empty")
+		}
+
+		// Test required components
+		required := []string{
+			"package test",
+			"type TestType struct {",
+			"TestInterface",
+			"func (v TestType) MarshalJSON() ([]byte, error)",
+			"func (v *TestType) UnmarshalJSON(data []byte) error",
+			`"type", typeName`,
+			`case "sub-type1":`,
+			`case "sub-type2":`,
+			`reflect.TypeOf((*SubType1)(nil)).Elem()`,
+			`reflect.TypeOf((*SubType2)(nil)).Elem()`,
+		}
+
+		for _, r := range required {
+			if !strings.Contains(code, r) {
+				t.Errorf("generated code missing required part: %q", r)
+				t.Logf("Generated code:\n%s", code)
+			}
+		}
+	})
+
+	t.Run("custom values", func(t *testing.T) {
+		subType1Name := "my-subtype-1"
+		config := FileConfig{
+			DefaultDescriptor: "kind",
+			StrictByDefault:   true,
+			Types: []TypeConfig{
+				{
+					Type:      "TestType",
+					Interface: "TestInterface",
+					Package:   "test",
+					Directory: "pkg",
+					Subtypes: map[string]SubtypeConfig{
+						"SubType1": {
+							Name:    &subType1Name,
+							Pointer: false,
+						},
+						"SubType2": {
+							Pointer: true,
+						},
+					},
+				},
+			},
+		}
+
+		// Convert first type config to internal format
+		cfg := &Config{
+			Type:       config.Types[0].Type,
+			Interface:  config.Types[0].Interface,
+			Package:    config.Types[0].Package,
+			Descriptor: config.DefaultDescriptor,
+			Strict:     config.StrictByDefault,
+		}
+
+		// Process subtypes
+		for subType, subConfig := range config.Types[0].Subtypes {
+			typeName := subType
+			if subConfig.Name != nil {
+				typeName = *subConfig.Name
+			} else {
+				typeName = toKebabCase(subType)
+			}
+			cfg.Types = append(cfg.Types, TypeMapping{
+				SubType:   subType,
+				TypeName:  typeName,
+				IsPointer: subConfig.Pointer,
+			})
+		}
+
+		// Generate code
+		code, err := generate(cfg)
+		if err != nil {
+			t.Fatalf("generate failed: %v", err)
+		}
+
+		if code == "" {
+			t.Error("generated code is empty")
+		}
+
+		// Test required components
+		required := []string{
+			"package test",
+			"type TestType struct {",
+			"TestInterface",
+			"func (v TestType) MarshalJSON() ([]byte, error)",
+			"func (v *TestType) UnmarshalJSON(data []byte) error",
+			`"kind", typeName`,
+			`case "my-subtype-1":`,
+			`case "sub-type2":`,
+			`reflect.TypeOf((*SubType1)(nil)).Elem()`,
+			`reflect.TypeOf((*SubType2)(nil)).Elem()`,
+			"decoder.DisallowUnknownFields()",
+		}
+
+		for _, r := range required {
+			if !strings.Contains(code, r) {
+				t.Errorf("generated code missing required part: %q", r)
+				t.Logf("Generated code:\n%s", code)
+			}
+		}
+	})
 }

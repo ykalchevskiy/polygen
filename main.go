@@ -1,137 +1,136 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
-	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
+	"unicode"
 )
 
-type Config struct {
-	Type       string
-	Interface  string
-	Types      []TypeMapping
-	Descriptor string
-	Strict     bool
-	Package    string
-	File       string
-}
-
-type TypeMapping struct {
-	SubType   string
-	TypeName  string
-	IsPointer bool
-}
-
 func main() {
-	cfg, err := parseFlags()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		os.Exit(1)
-	}
-
-	code, err := generate(cfg)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error generating code: %v\n", err)
-		os.Exit(1)
-	}
-
-	if err := os.WriteFile(cfg.File, []byte(code), 0644); err != nil {
-		fmt.Fprintf(os.Stderr, "Error writing file: %v\n", err)
-		os.Exit(1)
-	}
-}
-
-func parseFlags() (*Config, error) {
-	typeFlag := flag.String("type", "", "name of the polymorphic structure (required)")
-	interfaceFlag := flag.String("interface", "", "name of the interface all subtypes should implement (required)")
-	typesFlag := flag.String("types", "", "comma-separated list of subtypes and their type names (required)")
-	descriptorFlag := flag.String("descriptor", "type", "name of the JSON field to distinguish types")
-	strictFlag := flag.Bool("strict", false, "enable strict JSON unmarshaling (disallow unknown fields)")
-	packageFlag := flag.String("package", "", "package name (defaults to current package)")
-	fileFlag := flag.String("file", "", "output file name (defaults to current file with 'polygen' suffix)")
-
+	configPath := flag.String("config", ".polygen.json", "Path to the configuration file")
 	flag.Parse()
 
-	if *typeFlag == "" {
-		return nil, fmt.Errorf("type flag is required")
-	}
-	if *interfaceFlag == "" {
-		return nil, fmt.Errorf("interface flag is required")
-	}
-	if *typesFlag == "" {
-		return nil, fmt.Errorf("types flag is required")
+	// Read and parse config file
+	configData, err := os.ReadFile(*configPath)
+	if err != nil {
+		log.Fatalf("Failed to read config file: %v", err)
 	}
 
-	types := make([]TypeMapping, 0)
-	for _, t := range strings.Split(*typesFlag, ",") {
-		parts := strings.Split(t, "|")
-		subType := parts[0]
-		typeName := subType
-		isPointer := strings.HasPrefix(subType, "*")
-		if isPointer {
-			subType = subType[1:] // Remove the * prefix
-		}
-		if len(parts) > 1 {
-			typeName = parts[1]
-		}
-		types = append(types, TypeMapping{
-			SubType:   subType,
-			TypeName:  typeName,
-			IsPointer: isPointer,
-		})
+	var config FileConfig
+	if err := json.Unmarshal(configData, &config); err != nil {
+		log.Fatalf("Failed to parse config file: %v", err)
 	}
 
-	// Set default package name if not provided
-	pkg := *packageFlag
-	if pkg == "" {
-		// Try to detect package from the caller's file (using GOFILE env var set by go:generate)
-		if goFile := os.Getenv("GOFILE"); goFile != "" {
-			// Read the file and detect its package
-			content, err := os.ReadFile(goFile)
-			if err == nil {
-				// Simple package detection - look for "package" followed by identifier
-				lines := strings.Split(string(content), "\n")
-				for _, line := range lines {
-					line = strings.TrimSpace(line)
-					if strings.HasPrefix(line, "package ") {
-						pkg = strings.TrimSpace(strings.TrimPrefix(line, "package "))
-						break
-					}
-				}
-			}
-		}
-		// Fallback to "main" if we couldn't detect the package
-		if pkg == "" {
-			pkg = "main"
-		}
+	// Set default descriptor if not specified
+	if config.DefaultDescriptor == "" {
+		config.DefaultDescriptor = "type"
 	}
 
-	// Set default file name if not provided
-	file := *fileFlag
-	if file == "" {
-		// If the file flag is empty, use the base name of the first argument
-		// and insert 'polygen' before the .go extension
-		if len(os.Args) > 0 {
-			base := filepath.Base(os.Args[0])
-			if strings.HasSuffix(base, ".go") {
-				file = strings.TrimSuffix(base, ".go") + "_polygen.go"
-			} else {
-				file = base + "_polygen.go"
-			}
+	// Generate code for each type
+	configDir := filepath.Dir(*configPath)
+	for _, typeConfig := range config.Types {
+		// Convert config to internal format
+		cfg := &Config{
+			Type:       typeConfig.Type,
+			Interface:  typeConfig.Interface,
+			Descriptor: typeConfig.Descriptor,
+			Package:    typeConfig.Package,
+		}
+
+		// Use default descriptor if not specified
+		if cfg.Descriptor == "" {
+			cfg.Descriptor = config.DefaultDescriptor
+		}
+
+		// Set strict mode
+		if typeConfig.Strict != nil {
+			cfg.Strict = *typeConfig.Strict
 		} else {
-			file = "polygen.go"
+			cfg.Strict = config.StrictByDefault
+		}
+
+		// Process subtypes
+		for subType, subConfig := range typeConfig.Subtypes {
+			typeName := subType
+			if subConfig.Name != nil {
+				typeName = *subConfig.Name
+			} else {
+				// Convert subtype name to kebab-case by default
+				typeName = toKebabCase(subType)
+			}
+			cfg.Types = append(cfg.Types, TypeMapping{
+				SubType:   subType,
+				TypeName:  typeName,
+				IsPointer: subConfig.Pointer,
+			})
+		}
+
+		// Set output path
+		var outputPath string
+		if typeConfig.Directory != "" {
+			outputPath = filepath.Join(configDir, typeConfig.Directory)
+		} else {
+			outputPath = configDir
+		}
+
+		if typeConfig.Filename != "" {
+			outputPath = filepath.Join(outputPath, typeConfig.Filename)
+		} else {
+			// Default filename uses snake_case to preserve consistency with _polygen.go suffix
+			outputPath = filepath.Join(outputPath, toSnakeCase(typeConfig.Type)+"_polygen.go")
+		}
+
+		// Create output directory if it doesn't exist
+		outputDir := filepath.Dir(outputPath)
+		if err := os.MkdirAll(outputDir, 0755); err != nil {
+			log.Fatalf("Failed to create output directory: %v", err)
+		}
+
+		// Generate code
+		code, err := generate(cfg)
+		if err != nil {
+			log.Fatalf("Failed to generate code for type %s: %v", typeConfig.Type, err)
+		}
+
+		// Write generated code to file
+		if err := os.WriteFile(outputPath, []byte(code), 0644); err != nil {
+			log.Fatalf("Failed to write generated code: %v", err)
+		}
+	}
+}
+
+// toKebabCase converts a string from PascalCase to kebab-case
+func toKebabCase(s string) string {
+	return toCase(s, "-")
+}
+
+// toSnakeCase converts a string from PascalCase to snake_case
+func toSnakeCase(s string) string {
+	return toCase(s, "_")
+}
+
+func toCase(s, sep string) string {
+	var result string
+	var words []string
+	var lastPos int
+	rs := []rune(s)
+
+	for i := 0; i < len(rs); i++ {
+		if i > 0 && unicode.IsUpper(rs[i]) {
+			words = append(words, strings.ToLower(s[lastPos:i]))
+			lastPos = i
 		}
 	}
 
-	return &Config{
-		Type:       *typeFlag,
-		Interface:  *interfaceFlag,
-		Types:      types,
-		Descriptor: *descriptorFlag,
-		Strict:     *strictFlag,
-		Package:    pkg,
-		File:       file,
-	}, nil
+	// append the last word
+	if lastPos < len(s) {
+		words = append(words, strings.ToLower(s[lastPos:]))
+	}
+
+	result = strings.Join(words, sep)
+	return result
 }

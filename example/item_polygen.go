@@ -8,35 +8,35 @@ import (
 	"reflect"
 )
 
-// _ItemValueTypeRegistry maps concrete types to their type names
-var _ItemValueTypeRegistry = map[reflect.Type]string{
+// _ItemTypeRegistry maps concrete types to their type names
+var _ItemTypeRegistry = map[reflect.Type]string{
 	reflect.TypeOf((*TextItem)(nil)).Elem():  "text",
 	reflect.TypeOf((*ImageItem)(nil)).Elem(): "image",
 }
 
-type ItemValue struct {
-	IsItemValue
+type Item struct {
+	IsItem
 }
 
-func (v ItemValue) MarshalJSON() ([]byte, error) {
-	if v.IsItemValue == nil {
+func (v Item) MarshalJSON() ([]byte, error) {
+	if v.IsItem == nil {
 		return []byte("null"), nil
 	}
 
 	// Marshal the implementation first to get its fields
-	implData, err := json.Marshal(v.IsItemValue)
+	implData, err := json.Marshal(v.IsItem)
 	if err != nil {
-		return nil, fmt.Errorf("marshaling IsItemValue implementation: %v", err)
+		return nil, fmt.Errorf("marshaling IsItem implementation: %v", err)
 	}
 
 	// Get type name from registry using the concrete type
-	t := reflect.TypeOf(v.IsItemValue)
+	t := reflect.TypeOf(v.IsItem)
 	if t.Kind() == reflect.Ptr {
 		t = t.Elem()
 	}
-	typeName, ok := _ItemValueTypeRegistry[t]
+	typeName, ok := _ItemTypeRegistry[t]
 	if !ok {
-		return nil, fmt.Errorf("unknown type for ItemValue: %v", t)
+		return nil, fmt.Errorf("unknown type for Item: %v", t)
 	}
 
 	// If it's an empty object, just return descriptor
@@ -52,54 +52,64 @@ func (v ItemValue) MarshalJSON() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (v *ItemValue) UnmarshalJSON(data []byte) error {
+func (v *Item) UnmarshalJSON(data []byte) error {
 	if string(data) == "null" {
-		*v = ItemValue{}
+		*v = Item{}
 		return nil
 	}
-	return v.unmarshalNonStrict(data)
-}
-func (v *ItemValue) unmarshalNonStrict(data []byte) error {
+
 	// First unmarshal to get the type
 	var raw map[string]json.RawMessage
 	if err := json.Unmarshal(data, &raw); err != nil {
-		return fmt.Errorf("unmarshaling ItemValue raw: %v", err)
+		return fmt.Errorf("unmarshaling Item raw: %v", err)
 	}
 
 	// Check and extract type field
 	typeData, exists := raw["kind"]
 	var typeName string
 	if !exists {
-		// If no type field and we have an existing value, decode into it non-strictly
-		if v.IsItemValue != nil {
-			return json.Unmarshal(data, v.IsItemValue)
+		// If no type field and we have an existing value, decode into it
+		if v.IsItem != nil {
+			decoder := json.NewDecoder(bytes.NewReader(data))
+			decoder.DisallowUnknownFields()
+			return decoder.Decode(v.IsItem)
 		}
-		return fmt.Errorf("missing kind field in JSON for ItemValue")
+		return fmt.Errorf("missing kind field in JSON for Item")
 	}
 	if err := json.Unmarshal(typeData, &typeName); err != nil {
-		return fmt.Errorf("unmarshaling ItemValue type value: %v", err)
+		return fmt.Errorf("unmarshaling Item type value: %v", err)
 	}
 
-	var value IsItemValue
+	var value IsItem
 	switch typeName {
 	case "text":
-		var v TextItem
-		if err := json.Unmarshal(data, &v); err != nil {
-			return fmt.Errorf("unmarshaling ItemValue as TextItem: %v", err)
+		v := struct {
+			TextItem
+			Type string `json:"kind"`
+		}{}
+		decoder := json.NewDecoder(bytes.NewReader(data))
+		decoder.DisallowUnknownFields()
+		if err := decoder.Decode(&v); err != nil {
+			return fmt.Errorf("unmarshaling Item as TextItem: %v", err)
 		}
-		value = v
+		value = v.TextItem
 	case "image":
-		var v ImageItem
-		if err := json.Unmarshal(data, &v); err != nil {
-			return fmt.Errorf("unmarshaling ItemValue as ImageItem: %v", err)
+		v := struct {
+			ImageItem
+			Type string `json:"kind"`
+		}{}
+		decoder := json.NewDecoder(bytes.NewReader(data))
+		decoder.DisallowUnknownFields()
+		if err := decoder.Decode(&v); err != nil {
+			return fmt.Errorf("unmarshaling Item as ImageItem: %v", err)
 		}
-		value = v
+		value = &v.ImageItem
 	default:
-		return fmt.Errorf("unknown ItemValue type: %s", typeName)
+		return fmt.Errorf("unknown Item type: %s", typeName)
 	}
 
-	*v = ItemValue{
-		IsItemValue: value,
+	*v = Item{
+		IsItem: value,
 	}
 	return nil
 }

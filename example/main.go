@@ -6,17 +6,17 @@ import (
 	"log"
 )
 
-//go:generate go run github.com/ykalchevskiy/polygen -type=ItemValue -interface=IsItemValue -types=TextItem|text,ImageItem|image -descriptor=kind -package=main -file=item_polygen.go
+//go:generate go run github.com/ykalchevskiy/polygen
 
-type IsItemValue interface {
-	isItemValue()
+type IsItem interface {
+	isItem()
 }
 
 type TextItem struct {
 	Content string
 }
 
-func (TextItem) isItemValue() {}
+func (TextItem) isItem() {}
 
 type ImageItem struct {
 	URL    string
@@ -24,16 +24,16 @@ type ImageItem struct {
 	Height int
 }
 
-func (ImageItem) isItemValue() {}
+func (ImageItem) isItem() {}
 
 func main() {
 	// Create and marshal items
-	items := []ItemValue{
+	items := []Item{
 		{
-			IsItemValue: TextItem{Content: "Hello, World!"},
+			IsItem: TextItem{Content: "Hello, World!"},
 		},
 		{
-			IsItemValue: ImageItem{
+			IsItem: ImageItem{
 				URL:    "https://example.com/image.jpg",
 				Width:  800,
 				Height: 600,
@@ -56,12 +56,12 @@ func main() {
 	}
 
 	for _, data := range jsonData {
-		var item ItemValue
+		var item Item
 		if err := json.Unmarshal([]byte(data), &item); err != nil {
 			log.Fatal(err)
 		}
 
-		switch v := item.IsItemValue.(type) {
+		switch v := item.IsItem.(type) {
 		case TextItem:
 			fmt.Printf("Got text item: %s\n", v.Content)
 		case ImageItem:

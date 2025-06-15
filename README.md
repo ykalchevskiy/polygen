@@ -14,23 +14,67 @@ go install github.com/ykalchevskiy/polygen@latest
 
 ## Usage
 
-Add a go:generate comment to your source file:
+Create a `.polygen.json` file in your project root:
 
-```go
-//go:generate polygen -type=ItemValue -interface=IsItemValue -types=ItemValue1|item-value-1,ItemValue2|item-value-2 -descriptor=type -package=domain -file=item_polygen.go
+```json
+{
+    "$schema": "https://raw.githubusercontent.com/ykalchevskiy/polygen/main/schema.json",
+    "strictByDefault": true,
+    "defaultDescriptor": "kind",
+    "types": [
+        {
+            "type": "Item",
+            "interface": "IsItem",
+            "package": "main",
+            "directory": "pkg",
+            "subtypes": {
+                "TextItem": {
+                    "name": "text"
+                },
+                "ImageItem": {
+                    "name": "image",
+                    "pointer": true
+                }
+            }
+        }
+    ]
+}
 ```
 
-### Parameters
+Then run:
 
-- `-type` (required): The name of the polymorphic structure
-- `-interface` (required): The name of the interface all subtypes should implement
-- `-types` (required): Comma-separated list of subtypes and their type names (format: `SubType|type-name`)
-  - Subtype can be prefixed with `*` to indicate a pointer type
-  - Type name is optional and defaults to the subtype name
-- `-descriptor` (optional): Name of the JSON field to distinguish types (default: "type")
-- `-strict` (optional): Enable strict JSON unmarshaling, disallowing unknown fields (default: false)
-- `-package` (optional): Package name (defaults to current package)
-- `-file` (optional): Output file name (defaults to current file with 'polygen' suffix)
+```bash
+polygen
+```
+
+## Configuration
+
+The JSON configuration file supports:
+
+- Multiple type definitions in a single file
+- Global and per-type strict mode settings
+- Global and per-type descriptor field name
+- Simpler subtype configuration with pointer settings
+- Custom output paths relative to config file
+- Default kebab-case type names for subtypes
+
+### Schema
+
+The configuration follows this structure:
+
+- `strictByDefault` (optional): Enable strict mode by default
+- `defaultDescriptor` (optional): Default JSON field name for type discrimination (default: "type")
+- `types` (required): Array of type configurations:
+  - `type` (required): Name of the polymorphic structure
+  - `interface` (required): Name of the interface all subtypes implement
+  - `package` (required): Package name for generated code
+  - `descriptor` (optional): Override default JSON field name
+  - `directory` (optional): Output directory path relative to config file
+  - `filename` (optional): Output filename (defaults to <type>_polygen.go)
+  - `strict` (optional): Override strict mode for this type
+  - `subtypes` (required): Map of Go type names to their configurations:
+    - `name` (optional): JSON type name (defaults to subtype name in kebab-case)
+    - `pointer` (optional): Use pointer for this type (default: false)
 
 ## Features
 
@@ -40,48 +84,50 @@ Add a go:generate comment to your source file:
 - Strict mode for JSON unmarshaling
 - Support for patching/updating fields without specifying type
 - Automatic type preservation when patching existing values
+- Default kebab-case type names for cleaner JSON
 
 ## Example
 
-Given the following code:
+Given the following Go code:
 
 ```go
-package domain
-
-type IsItemValue interface {
-    isItemValue()
+type IsItem interface {
+    isItem()
 }
 
-type ItemValue1 struct {
-    Value string
+type TextItem struct {
+    Content string
 }
 
-func (ItemValue1) isItemValue() {}
+func (TextItem) isItem() {}
 
-type ItemValue2 struct {
-    Amount int
+type ImageItem struct {
+    URL    string
+    Width  int
+    Height int
 }
 
-func (ItemValue2) isItemValue() {}
-
-//go:generate polygen -type=ItemValue -interface=IsItemValue -types=ItemValue1|item-value-1,ItemValue2|item-value-2
+func (ImageItem) isItem() {}
 ```
 
-Running `go generate` will create a file with a polymorphic `ItemValue` type that can be marshaled/unmarshaled to/from JSON:
+The generated code allows you to marshal/unmarshal your types to/from JSON:
 
 ```go
-// Creating a new value
-var value ItemValue
-json.Unmarshal([]byte(`{"type": "item-value-1", "value": "hello"}`), &value)
-// value.IsItemValue will be of type ItemValue1 with Value="hello"
+// Creating new values
+items := []Item{
+    {IsItem: TextItem{Content: "Hello, World!"}},
+    {IsItem: ImageItem{URL: "https://example.com/image.jpg"}},
+}
 
-// Patching an existing value - type is preserved
-json.Unmarshal([]byte(`{"value": "updated"}`), &value)
-// value.IsItemValue still ItemValue1 but with Value="updated"
+// Marshaling to JSON
+// {"kind": "text", "content": "Hello, World!"}
+// {"kind": "image", "url": "https://example.com/image.jpg"}
 
-// Changing type
-json.Unmarshal([]byte(`{"type": "item-value-2", "amount": 42}`), &value)
-// value.IsItemValue now of type ItemValue2 with Amount=42
+// Unmarshaling with type changes
+var item Item
+json.Unmarshal([]byte(`{"kind": "text", "content": "hello"}`), &item)
+json.Unmarshal([]byte(`{"content": "updated"}`), &item)  // Updates just content
+json.Unmarshal([]byte(`{"kind": "image", "url": "pic.jpg"}`), &item)  // Changes type
 ```
 
 ## Contributing

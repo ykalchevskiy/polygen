@@ -1,0 +1,72 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "required": ["types"],
+    "properties": {
+        "strictByDefault": {
+            "type": "boolean",
+            "description": "Enable strict mode by default for all types"
+        },
+        "defaultDescriptor": {
+            "type": "string",
+            "description": "Default JSON field name to distinguish types (default: \"type\")",
+            "default": "type"
+        },
+        "types": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": ["type", "interface", "package", "subtypes"],
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "description": "Name of the polymorphic structure to generate"
+                    },
+                    "interface": {
+                        "type": "string",
+                        "description": "Name of the interface all subtypes implement"
+                    },
+                    "package": {
+                        "type": "string",
+                        "description": "Package name for the generated file"
+                    },
+                    "descriptor": {
+                        "type": "string",
+                        "description": "JSON field name to distinguish types (overrides defaultDescriptor)"
+                    },
+                    "directory": {
+                        "type": "string",
+                        "description": "Output directory path relative to config file"
+                    },
+                    "filename": {
+                        "type": "string",
+                        "description": "Output filename (defaults to <type_snake_case>_polygen.go)"
+                    },
+                    "strict": {
+                        "type": "boolean",
+                        "description": "Enable strict JSON unmarshaling for this type"
+                    },
+                    "subtypes": {
+                        "type": "object",
+                        "description": "Map of Go types to their configurations",
+                        "additionalProperties": {
+                            "type": "object",
+                            "properties": {
+                                "name": {
+                                    "type": "string",
+                                    "description": "JSON type name (defaults to subtype name in snake_case)"
+                                },
+                                "pointer": {
+                                    "type": "boolean",
+                                    "description": "Use pointer for this type",
+                                    "default": false
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "minItems": 1
+        }
+    }
+}
