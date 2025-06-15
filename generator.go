@@ -99,29 +99,24 @@ func (v *{{.Type}}) unmarshalStrict(data []byte) error {
 		return fmt.Errorf("unmarshaling {{.Type}} type value: %v", err)
 	}
 
-	// Remove type field from raw data
-	delete(raw, "{{.Descriptor}}")
-	
-	// Re-marshal remaining fields
-	dataWithoutType, err := json.Marshal(raw)
-	if err != nil {
-		return fmt.Errorf("re-marshaling {{.Type}} data: %v", err)
-	}
-
 	var value {{.Interface}}
 	switch typeName {
 	{{- range .Types}}
 	case "{{.TypeName}}":
-		var v {{.SubType}}
-		decoder := json.NewDecoder(bytes.NewReader(dataWithoutType))
+		v := struct {
+		   		{{.SubType}}
+		   		Type string ` + "`json:\"{{$.Descriptor}}\"`" + `
+		}{}
+		// var v {{.SubType}}
+		decoder := json.NewDecoder(bytes.NewReader(data))
 		decoder.DisallowUnknownFields()
 		if err := decoder.Decode(&v); err != nil {
 			return fmt.Errorf("unmarshaling {{$.Type}} as {{.SubType}}: %v", err)
 		}
 		{{- if .IsPointer}}
-		value = &v
+		value = &v.{{.SubType}}
 		{{- else}}
-		value = v
+		value = v.{{.SubType}}
 		{{- end}}
 	{{- end}}
 	default:

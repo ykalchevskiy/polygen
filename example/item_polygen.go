@@ -57,40 +57,45 @@ func (v *ItemValue) UnmarshalJSON(data []byte) error {
 		*v = ItemValue{}
 		return nil
 	}
-
-	var discriminator struct {
-		Type string `json:"kind"`
+	return v.unmarshalNonStrict(data)
+}
+func (v *ItemValue) unmarshalNonStrict(data []byte) error {
+	// First unmarshal to get the type
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return fmt.Errorf("unmarshaling ItemValue raw: %v", err)
 	}
-	if err := json.Unmarshal(data, &discriminator); err != nil {
-		return fmt.Errorf("unmarshaling ItemValue discriminator: %v", err)
-	}
 
-	// If type is not specified in patch, attempt to unmarshal into existing value
-	if discriminator.Type == "" && v.IsItemValue != nil {
-		decoder := json.NewDecoder(bytes.NewReader(data))
-		return decoder.Decode(v.IsItemValue)
-	} else if discriminator.Type == "" {
+	// Check and extract type field
+	typeData, exists := raw["kind"]
+	var typeName string
+	if !exists {
+		// If no type field and we have an existing value, decode into it non-strictly
+		if v.IsItemValue != nil {
+			return json.Unmarshal(data, v.IsItemValue)
+		}
 		return fmt.Errorf("missing kind field in JSON for ItemValue")
+	}
+	if err := json.Unmarshal(typeData, &typeName); err != nil {
+		return fmt.Errorf("unmarshaling ItemValue type value: %v", err)
 	}
 
 	var value IsItemValue
-	switch discriminator.Type {
+	switch typeName {
 	case "text":
 		var v TextItem
-		decoder := json.NewDecoder(bytes.NewReader(data))
-		if err := decoder.Decode(&v); err != nil {
+		if err := json.Unmarshal(data, &v); err != nil {
 			return fmt.Errorf("unmarshaling ItemValue as TextItem: %v", err)
 		}
 		value = v
 	case "image":
 		var v ImageItem
-		decoder := json.NewDecoder(bytes.NewReader(data))
-		if err := decoder.Decode(&v); err != nil {
+		if err := json.Unmarshal(data, &v); err != nil {
 			return fmt.Errorf("unmarshaling ItemValue as ImageItem: %v", err)
 		}
 		value = v
 	default:
-		return fmt.Errorf("unknown ItemValue type: %s", discriminator.Type)
+		return fmt.Errorf("unknown ItemValue type: %s", typeName)
 	}
 
 	*v = ItemValue{

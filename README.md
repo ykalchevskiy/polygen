@@ -29,7 +29,6 @@ Add a go:generate comment to your source file:
   - Type name is optional and defaults to the subtype name
 - `-descriptor` (optional): Name of the JSON field to distinguish types (default: "type")
 - `-strict` (optional): Enable strict JSON unmarshaling, disallowing unknown fields (default: false)
-  > ⚠️ Note: Strict mode performs additional JSON operations and is less performant than non-strict mode. Only use it when you need to strictly validate JSON input.
 - `-package` (optional): Package name (defaults to current package)
 - `-file` (optional): Output file name (defaults to current file with 'polygen' suffix)
 

@@ -18,10 +18,9 @@ Parameters:
 	             Subtype can be prefixed with * to indicate a pointer type
 	             Type name is optional and defaults to the subtype name
 	-descriptor  (optional) Name of the JSON field to distinguish types (default: "type")
-	-strict     (optional) Enable strict JSON unmarshaling, disallowing unknown fields (default: false)
-	            Note: Strict mode requires additional JSON operations and is less performant than non-strict mode
+	-strict      (optional) Enable strict JSON unmarshaling, disallowing unknown fields (default: false)
 	-package     (optional) Package name (defaults to current package)
-	-file       (optional) Output file name (defaults to current file with 'polygen' suffix)
+	-file        (optional) Output file name (defaults to current file with 'polygen' suffix)
 
 Example:
 
