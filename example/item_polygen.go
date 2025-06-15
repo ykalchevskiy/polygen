@@ -10,8 +10,8 @@ import (
 
 // _ItemTypeRegistry maps concrete types to their type names
 var _ItemTypeRegistry = map[reflect.Type]string{
-	reflect.TypeOf((*TextItem)(nil)).Elem():  "text",
 	reflect.TypeOf((*ImageItem)(nil)).Elem(): "image",
+	reflect.TypeOf((*TextItem)(nil)).Elem():  "text",
 }
 
 type Item struct {
@@ -82,17 +82,6 @@ func (v *Item) UnmarshalJSON(data []byte) error {
 
 	var value IsItem
 	switch typeName {
-	case "text":
-		v := struct {
-			TextItem
-			Type string `json:"kind"`
-		}{}
-		decoder := json.NewDecoder(bytes.NewReader(data))
-		decoder.DisallowUnknownFields()
-		if err := decoder.Decode(&v); err != nil {
-			return fmt.Errorf("unmarshaling Item as TextItem: %v", err)
-		}
-		value = v.TextItem
 	case "image":
 		v := struct {
 			ImageItem
@@ -104,6 +93,17 @@ func (v *Item) UnmarshalJSON(data []byte) error {
 			return fmt.Errorf("unmarshaling Item as ImageItem: %v", err)
 		}
 		value = &v.ImageItem
+	case "text":
+		v := struct {
+			TextItem
+			Type string `json:"kind"`
+		}{}
+		decoder := json.NewDecoder(bytes.NewReader(data))
+		decoder.DisallowUnknownFields()
+		if err := decoder.Decode(&v); err != nil {
+			return fmt.Errorf("unmarshaling Item as TextItem: %v", err)
+		}
+		value = v.TextItem
 	default:
 		return fmt.Errorf("unknown Item type: %s", typeName)
 	}

@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"unicode"
 )
@@ -68,6 +69,11 @@ func main() {
 				IsPointer: subConfig.Pointer,
 			})
 		}
+
+		// Sort types by SubType for consistent output
+		sort.Slice(cfg.Types, func(i, j int) bool {
+			return cfg.Types[i].SubType < cfg.Types[j].SubType
+		})
 
 		// Set output path
 		var outputPath string
