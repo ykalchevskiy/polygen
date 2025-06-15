@@ -68,15 +68,6 @@ func (v *{{.Type}}) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 
-	{{- if .Strict}}
-	return v.unmarshalStrict(data)
-	{{- else}}
-	return v.unmarshalNonStrict(data)
-	{{- end}}
-}
-
-{{- if .Strict}}
-func (v *{{.Type}}) unmarshalStrict(data []byte) error {
 	// First unmarshal to get the type
 	var raw map[string]json.RawMessage
 	if err := json.Unmarshal(data, &raw); err != nil {
@@ -87,11 +78,15 @@ func (v *{{.Type}}) unmarshalStrict(data []byte) error {
 	typeData, exists := raw["{{.Descriptor}}"]
 	var typeName string
 	if !exists {
-		// If no type field and we have an existing value, decode into it strictly
+		// If no type field and we have an existing value, decode into it
 		if v.{{.Interface}} != nil {
+			{{- if .Strict}}
 			decoder := json.NewDecoder(bytes.NewReader(data))
 			decoder.DisallowUnknownFields()
 			return decoder.Decode(v.{{.Interface}})
+			{{- else}}
+			return json.Unmarshal(data, v.{{.Interface}})
+			{{- end}}
 		}
 		return fmt.Errorf("missing {{.Descriptor}} field in JSON for {{.Type}}")
 	}
@@ -103,11 +98,11 @@ func (v *{{.Type}}) unmarshalStrict(data []byte) error {
 	switch typeName {
 	{{- range .Types}}
 	case "{{.TypeName}}":
+		{{- if $.Strict}}
 		v := struct {
-		   		{{.SubType}}
-		   		Type string ` + "`json:\"{{$.Descriptor}}\"`" + `
+			{{.SubType}}
+			Type string ` + "`json:\"{{$.Descriptor}}\"`" + `
 		}{}
-		// var v {{.SubType}}
 		decoder := json.NewDecoder(bytes.NewReader(data))
 		decoder.DisallowUnknownFields()
 		if err := decoder.Decode(&v); err != nil {
@@ -118,44 +113,7 @@ func (v *{{.Type}}) unmarshalStrict(data []byte) error {
 		{{- else}}
 		value = v.{{.SubType}}
 		{{- end}}
-	{{- end}}
-	default:
-		return fmt.Errorf("unknown {{.Type}} type: %s", typeName)
-	}
-
-	*v = {{.Type}}{
-		{{.Interface}}: value,
-	}
-	return nil
-}
-{{- end}}
-
-{{- if not .Strict}}
-func (v *{{.Type}}) unmarshalNonStrict(data []byte) error {
-	// First unmarshal to get the type
-	var raw map[string]json.RawMessage
-	if err := json.Unmarshal(data, &raw); err != nil {
-		return fmt.Errorf("unmarshaling {{.Type}} raw: %v", err)
-	}
-
-	// Check and extract type field
-	typeData, exists := raw["{{.Descriptor}}"]
-	var typeName string
-	if !exists {
-		// If no type field and we have an existing value, decode into it non-strictly
-		if v.{{.Interface}} != nil {
-			return json.Unmarshal(data, v.{{.Interface}})
-		}
-		return fmt.Errorf("missing {{.Descriptor}} field in JSON for {{.Type}}")
-	}
-	if err := json.Unmarshal(typeData, &typeName); err != nil {
-		return fmt.Errorf("unmarshaling {{.Type}} type value: %v", err)
-	}
-
-	var value {{.Interface}}
-	switch typeName {
-	{{- range .Types}}
-	case "{{.TypeName}}":
+		{{- else}}
 		var v {{.SubType}}
 		if err := json.Unmarshal(data, &v); err != nil {
 			return fmt.Errorf("unmarshaling {{$.Type}} as {{.SubType}}: %v", err)
@@ -164,6 +122,7 @@ func (v *{{.Type}}) unmarshalNonStrict(data []byte) error {
 		value = &v
 		{{- else}}
 		value = v
+		{{- end}}
 		{{- end}}
 	{{- end}}
 	default:
@@ -175,7 +134,6 @@ func (v *{{.Type}}) unmarshalNonStrict(data []byte) error {
 	}
 	return nil
 }
-{{- end}}
 `
 
 func generate(cfg *Config) (string, error) {
