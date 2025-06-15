@@ -190,11 +190,11 @@ func must(data []byte, err error) string {
 		}
 
 		lines := strings.Split(string(output), "\n")
-		
+
 		// Check we have exactly the expected number of lines
 		if len(lines) != len(expectedLines) {
-			t.Errorf("Got %d lines, want %d lines\nGot output:\n%s\nWant output:\n%s", 
-				len(lines), len(expectedLines), 
+			t.Errorf("Got %d lines, want %d lines\nGot output:\n%s\nWant output:\n%s",
+				len(lines), len(expectedLines),
 				string(output), strings.Join(expectedLines, "\n"))
 			return
 		}
