@@ -40,7 +40,7 @@ func TestGenerator(t *testing.T) {
 		}
 
 		// Copy polygen source files
-		files := []string{"main.go", "generator.go", "config.go"}
+		files := []string{"main.go", "generator.go", "config.go", "template.go.tmpl"}
 		for _, file := range files {
 			if err := copyFile(file, filepath.Join(tempDir, file)); err != nil {
 				t.Fatalf("failed to copy %s: %v", file, err)
