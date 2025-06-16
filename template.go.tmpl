@@ -30,14 +30,9 @@ func (v {{.Type}}) MarshalJSON() ([]byte, error) {
 		return nil, fmt.Errorf("marshaling {{.Interface}} implementation: %v", err)
 	}
 
-	// Get type name from registry using the concrete type
-	t := reflect.TypeOf(v.{{.Interface}})
-	if t.Kind() == reflect.Ptr {
-		t = t.Elem()
-	}
-	typeName, ok := _{{.Type}}TypeRegistry[t]
-	if !ok {
-		return nil, fmt.Errorf("unknown type for {{.Type}}: %v", t)
+	typeName, err := getType(v.{{.Interface}})
+	if err != nil {
+		return nil, fmt.Errorf("getting type for {{.Type}}: %v", err)
 	}
 
 	// If it's an empty object, just return descriptor
@@ -67,18 +62,19 @@ func (v *{{.Type}}) UnmarshalJSON(data []byte) error {
 		return fmt.Errorf("unmarshaling {{.Type}} type field: %v", err)
 	}
 
+	var currTypeName string
+
 	if typeData.Type == "" {
-		// If no type field and we have an existing value, decode into it
 		if v.{{.Interface}} != nil {
-			{{- if .Strict}}
-			decoder := json.NewDecoder(bytes.NewReader(data))
-			decoder.DisallowUnknownFields()
-			return decoder.Decode(v.{{.Interface}})
-			{{- else}}
-			return json.Unmarshal(data, v.{{.Interface}})
-			{{- end}}
+			var err error
+			currTypeName, err = getType(v.{{.Interface}})
+			if err != nil {
+				return fmt.Errorf("getting type for existing {{.Type}}: %v", err)
+			}
+			typeData.Type = currTypeName
+		} else {
+			return fmt.Errorf("missing {{.Descriptor}} field in JSON for {{.Type}}")
 		}
-		return fmt.Errorf("missing {{.Descriptor}} field in JSON for {{.Type}}")
 	}
 
  	typeName := typeData.Type
@@ -88,30 +84,36 @@ func (v *{{.Type}}) UnmarshalJSON(data []byte) error {
 	{{- range .Types}}
 	case "{{.TypeName}}":
 		{{- if $.Strict}}
-		v := struct {
-			{{.SubType}}
-			Type string `json:"{{$.Descriptor}}"`
-		}{}
-		decoder := json.NewDecoder(bytes.NewReader(data))
-		decoder.DisallowUnknownFields()
-		if err := decoder.Decode(&v); err != nil {
-			return fmt.Errorf("unmarshaling {{$.Type}} as {{.SubType}}: %v", err)
-		}
-		{{- if .IsPointer}}
-		value = &v.{{.SubType}}
+			vv := struct {
+				{{- if .IsPointer}}*{{- end}}{{.SubType}}
+				Type string `json:"{{$.Descriptor}}"`
+			}{}
+			if currTypeName == "{{.TypeName}}" {
+				{{- if .IsPointer}}
+				vv.{{.SubType}} = v.{{$.Interface}}.(*{{.SubType}})
+				{{- else}}
+				vv.{{.SubType}} = v.{{$.Interface}}.({{.SubType}})
+				{{- end}}
+			}
+			decoder := json.NewDecoder(bytes.NewReader(data))
+			decoder.DisallowUnknownFields()
+			if err := decoder.Decode(&vv); err != nil {
+				return fmt.Errorf("unmarshaling {{$.Type}} as {{.SubType}}: %v", err)
+			}
+			value = vv.{{.SubType}}
 		{{- else}}
-		value = v.{{.SubType}}
-		{{- end}}
-		{{- else}}
-		var v {{.SubType}}
-		if err := json.Unmarshal(data, &v); err != nil {
-			return fmt.Errorf("unmarshaling {{$.Type}} as {{.SubType}}: %v", err)
-		}
-		{{- if .IsPointer}}
-		value = &v
-		{{- else}}
-		value = v
-		{{- end}}
+			var vv {{if .IsPointer}}*{{- end}}{{.SubType}}
+			if currTypeName == "{{.TypeName}}" {
+				{{- if .IsPointer}}
+				vv = v.{{$.Interface}}.(*{{.SubType}})
+				{{- else}}
+				vv = v.{{$.Interface}}.({{.SubType}})
+				{{- end}}
+			}
+			if err := json.Unmarshal(data, &vv); err != nil {
+				return fmt.Errorf("unmarshaling {{$.Type}} as {{.SubType}}: %v", err)
+			}
+			value = vv
 		{{- end}}
 	{{- end}}
 	default:
@@ -122,4 +124,17 @@ func (v *{{.Type}}) UnmarshalJSON(data []byte) error {
 		{{.Interface}}: value,
 	}
 	return nil
+}
+
+func getType(v {{.Interface}}) (string, error) {
+	t := reflect.TypeOf(v)
+	// Allows using a pointer as a value
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+	typeName, ok := _{{.Type}}TypeRegistry[t]
+	if !ok {
+		return "", fmt.Errorf("unknown type for {{.Type}}: %v", t)
+	}
+	return typeName, nil
 }

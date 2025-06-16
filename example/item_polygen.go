@@ -29,14 +29,9 @@ func (v Item) MarshalJSON() ([]byte, error) {
 		return nil, fmt.Errorf("marshaling IsItem implementation: %v", err)
 	}
 
-	// Get type name from registry using the concrete type
-	t := reflect.TypeOf(v.IsItem)
-	if t.Kind() == reflect.Ptr {
-		t = t.Elem()
-	}
-	typeName, ok := _ItemTypeRegistry[t]
-	if !ok {
-		return nil, fmt.Errorf("unknown type for Item: %v", t)
+	typeName, err := getType(v.IsItem)
+	if err != nil {
+		return nil, fmt.Errorf("getting type for Item: %v", err)
 	}
 
 	// If it's an empty object, just return descriptor
@@ -66,14 +61,19 @@ func (v *Item) UnmarshalJSON(data []byte) error {
 		return fmt.Errorf("unmarshaling Item type field: %v", err)
 	}
 
+	var currTypeName string
+
 	if typeData.Type == "" {
-		// If no type field and we have an existing value, decode into it
 		if v.IsItem != nil {
-			decoder := json.NewDecoder(bytes.NewReader(data))
-			decoder.DisallowUnknownFields()
-			return decoder.Decode(v.IsItem)
+			var err error
+			currTypeName, err = getType(v.IsItem)
+			if err != nil {
+				return fmt.Errorf("getting type for existing Item: %v", err)
+			}
+			typeData.Type = currTypeName
+		} else {
+			return fmt.Errorf("missing kind field in JSON for Item")
 		}
-		return fmt.Errorf("missing kind field in JSON for Item")
 	}
 
 	typeName := typeData.Type
@@ -81,27 +81,33 @@ func (v *Item) UnmarshalJSON(data []byte) error {
 	var value IsItem
 	switch typeName {
 	case "image":
-		v := struct {
-			ImageItem
+		vv := struct {
+			*ImageItem
 			Type string `json:"kind"`
 		}{}
+		if currTypeName == "image" {
+			vv.ImageItem = v.IsItem.(*ImageItem)
+		}
 		decoder := json.NewDecoder(bytes.NewReader(data))
 		decoder.DisallowUnknownFields()
-		if err := decoder.Decode(&v); err != nil {
+		if err := decoder.Decode(&vv); err != nil {
 			return fmt.Errorf("unmarshaling Item as ImageItem: %v", err)
 		}
-		value = &v.ImageItem
+		value = vv.ImageItem
 	case "text":
-		v := struct {
+		vv := struct {
 			TextItem
 			Type string `json:"kind"`
 		}{}
+		if currTypeName == "text" {
+			vv.TextItem = v.IsItem.(TextItem)
+		}
 		decoder := json.NewDecoder(bytes.NewReader(data))
 		decoder.DisallowUnknownFields()
-		if err := decoder.Decode(&v); err != nil {
+		if err := decoder.Decode(&vv); err != nil {
 			return fmt.Errorf("unmarshaling Item as TextItem: %v", err)
 		}
-		value = v.TextItem
+		value = vv.TextItem
 	default:
 		return fmt.Errorf("unknown Item type: %s", typeName)
 	}
@@ -110,4 +116,17 @@ func (v *Item) UnmarshalJSON(data []byte) error {
 		IsItem: value,
 	}
 	return nil
+}
+
+func getType(v IsItem) (string, error) {
+	t := reflect.TypeOf(v)
+	// Allows using a pointer as a value
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+	typeName, ok := _ItemTypeRegistry[t]
+	if !ok {
+		return "", fmt.Errorf("unknown type for Item: %v", t)
+	}
+	return typeName, nil
 }
