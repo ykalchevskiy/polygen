@@ -1,0 +1,57 @@
+{
+    "$schema": "https://raw.githubusercontent.com/ykalchevskiy/polygen/main/schema.json",
+    "types": [
+        {
+            "type": "Shape",
+            "interface": "IsShape",
+            "package": "tests",
+            "filename": "shape_polygen.go",
+            "strict": false,
+            "subtypes": {
+                "Circle": {
+                    "name": "circle"
+                },
+                "Rectangle": {
+                    "name": "rectangle"
+                },
+                "Polygon": {
+                    "name": "polygon",
+                    "pointer": true
+                },
+                "Group": {
+                    "name": "group",
+                    "pointer": true
+                },
+                "Empty": {
+                    "name": "empty"
+                }
+            }
+        },
+        {
+            "type": "ShapeStrict",
+            "interface": "IsShape",
+            "package": "tests",
+            "filename": "shape_strict_polygen.go",
+            "strict": true,
+            "subtypes": {
+                "Circle": {
+                    "name": "circle"
+                },
+                "Rectangle": {
+                    "name": "rectangle"
+                },
+                "Polygon": {
+                    "name": "polygon",
+                    "pointer": true
+                },
+                "Group": {
+                    "name": "group",
+                    "pointer": true
+                },
+                "Empty": {
+                    "name": "empty"
+                }
+            }
+        }
+    ]
+}
