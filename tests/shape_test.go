@@ -595,3 +595,41 @@ func TestShapeUpdate(t *testing.T) {
 		})
 	}
 }
+
+func TestShapeSettability(t *testing.T) {
+	t.Run("value subtype is not settable", func(t *testing.T) {
+		defer func() {
+			r := recover()
+			if r == nil {
+				t.Errorf("The code did not panic")
+			}
+			if !strings.Contains(r.(string), "reflect: reflect.Value.SetInt using unaddressable value") {
+				t.Errorf("Expected panic about non-settable value, got: %v", r)
+			}
+		}()
+
+		var value Shape
+		err := json.Unmarshal([]byte(`{"type":"circle","Radius":5}`), &value)
+		if err != nil {
+			t.Fatalf("Failed to unmarshal value: %v", err)
+		}
+
+		reflect.ValueOf(&value).Elem().FieldByName("IsShape").Elem().FieldByName("Radius").SetInt(10) // This should panic
+
+		t.Errorf("Expected panic when setting value field, but did not panic")
+	})
+
+	t.Run("pointer subtype is settable", func(t *testing.T) {
+		var pointer Shape
+		err := json.Unmarshal([]byte(`{"type":"group","Name":"test","Attributes":{"active":true}}`), &pointer)
+		if err != nil {
+			t.Fatalf("Failed to unmarshal pointer: %v", err)
+		}
+
+		reflect.ValueOf(&pointer).Elem().FieldByName("IsShape").Elem().Elem().FieldByName("Name").SetString("updated")
+
+		if pointer.IsShape.(*Group).Name != "updated" {
+			t.Errorf("Expected pointer name to be updated, got: %s", pointer.IsShape.(*Group).Name)
+		}
+	})
+}
