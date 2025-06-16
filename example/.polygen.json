@@ -1,6 +1,7 @@
 {
     "$schema": "https://raw.githubusercontent.com/ykalchevskiy/polygen/main/schema.json",
     "strictByDefault": true,
+    "pointerByDefault": true,
     "defaultDescriptor": "kind",
     "types": [
         {
@@ -9,11 +10,11 @@
             "package": "main",
             "subtypes": {
                 "TextItem": {
-                    "name": "text"
+                    "name": "text",
+                    "pointer": false
                 },
                 "ImageItem": {
-                    "name": "image",
-                    "pointer": true
+                    "name": "image"
                 }
             }
         }

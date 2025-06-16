@@ -240,6 +240,7 @@ func must(data []byte, err error) string {
 // TestConfig tests the configuration parsing and code generation with various settings
 func TestConfig(t *testing.T) {
 	t.Run("default values", func(t *testing.T) {
+		isPointerTrue := true
 		config := FileConfig{
 			Types: []TypeConfig{
 				{
@@ -248,7 +249,7 @@ func TestConfig(t *testing.T) {
 					Package:   "test",
 					Subtypes: map[string]SubtypeConfig{
 						"SubType1": {},
-						"SubType2": {Pointer: true},
+						"SubType2": {Pointer: &isPointerTrue},
 					},
 				},
 			},
@@ -270,10 +271,14 @@ func TestConfig(t *testing.T) {
 			} else {
 				typeName = toKebabCase(subType)
 			}
+			isPointer := config.PointerByDefault
+			if subConfig.Pointer != nil {
+				isPointer = *subConfig.Pointer
+			}
 			cfg.Types = append(cfg.Types, TypeMapping{
 				SubType:   subType,
 				TypeName:  typeName,
-				IsPointer: subConfig.Pointer,
+				IsPointer: isPointer,
 			})
 		}
 
@@ -310,6 +315,7 @@ func TestConfig(t *testing.T) {
 	})
 
 	t.Run("custom values", func(t *testing.T) {
+		isPointerTrue := true
 		subType1Name := "my-subtype-1"
 		config := FileConfig{
 			DefaultDescriptor: "kind",
@@ -322,11 +328,10 @@ func TestConfig(t *testing.T) {
 					Directory: "pkg",
 					Subtypes: map[string]SubtypeConfig{
 						"SubType1": {
-							Name:    &subType1Name,
-							Pointer: false,
+							Name: &subType1Name,
 						},
 						"SubType2": {
-							Pointer: true,
+							Pointer: &isPointerTrue,
 						},
 					},
 				},
@@ -350,10 +355,14 @@ func TestConfig(t *testing.T) {
 			} else {
 				typeName = toKebabCase(subType)
 			}
+			isPointer := config.PointerByDefault
+			if subConfig.Pointer != nil {
+				isPointer = *subConfig.Pointer
+			}
 			cfg.Types = append(cfg.Types, TypeMapping{
 				SubType:   subType,
 				TypeName:  typeName,
-				IsPointer: subConfig.Pointer,
+				IsPointer: isPointer,
 			})
 		}
 

@@ -53,6 +53,7 @@ The JSON configuration file supports:
 
 - Multiple type definitions in a single file
 - Global and per-type strict mode settings
+- Global and per-subtype strict mode settings
 - Global and per-type descriptor field name
 - Simpler subtype configuration with pointer settings
 - Custom output paths relative to config file
@@ -63,6 +64,7 @@ The JSON configuration file supports:
 The configuration follows this structure:
 
 - `strictByDefault` (optional): Enable strict mode by default
+- `pointerByDefault` (optional): Enable pointer mode by default
 - `defaultDescriptor` (optional): Default JSON field name for type discrimination (default: "type")
 - `types` (required): Array of type configurations:
   - `type` (required): Name of the polymorphic structure
@@ -74,7 +76,7 @@ The configuration follows this structure:
   - `strict` (optional): Override strict mode for this type
   - `subtypes` (required): Map of Go type names to their configurations:
     - `name` (optional): JSON type name (defaults to subtype name in kebab-case)
-    - `pointer` (optional): Use pointer for this type (default: false)
+    - `pointer` (optional): Use pointer for this type (defaults to `pointerByDefault`)
 
 ## Features
 

@@ -33,6 +33,7 @@ Create a .polygen.json configuration file:
 Configuration options:
 
 	strictByDefault    Enable strict mode by default for all types (optional)
+	pointerByDefault   Enable pointer mode by default for all subtypes (optional)
 	defaultDescriptor  Default JSON field name for type discrimination (default: "type")
 	types             Array of type configurations with the following fields:
 	  - type          Name of the polymorphic structure

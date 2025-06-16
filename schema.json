@@ -7,6 +7,10 @@
             "type": "boolean",
             "description": "Enable strict mode by default for all types"
         },
+        "pointerByDefault": {
+            "type": "boolean",
+            "description": "Enable pointer mode by default for all subtypes"
+        },
         "defaultDescriptor": {
             "type": "string",
             "description": "Default JSON field name to distinguish types (default: \"type\")",

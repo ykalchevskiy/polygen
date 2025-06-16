@@ -63,10 +63,14 @@ func main() {
 				// Convert subtype name to kebab-case by default
 				typeName = toKebabCase(subType)
 			}
+			isPointer := config.PointerByDefault
+			if subConfig.Pointer != nil {
+				isPointer = *subConfig.Pointer
+			}
 			cfg.Types = append(cfg.Types, TypeMapping{
 				SubType:   subType,
 				TypeName:  typeName,
-				IsPointer: subConfig.Pointer,
+				IsPointer: isPointer,
 			})
 		}
 

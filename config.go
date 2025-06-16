@@ -23,6 +23,8 @@ type FileConfig struct {
 	Types []TypeConfig `json:"types"`
 	// StrictByDefault determines if strict mode should be enabled by default for all types
 	StrictByDefault bool `json:"strictByDefault,omitempty"`
+	// PointerByDefault determines if pointer mode should be enabled by default for all subtypes
+	PointerByDefault bool `json:"pointerByDefault,omitempty"`
 	// DefaultDescriptor is the default JSON field name to distinguish types
 	DefaultDescriptor string `json:"defaultDescriptor,omitempty"`
 }
@@ -32,7 +34,7 @@ type SubtypeConfig struct {
 	// Name is the JSON type name, defaults to the subtype name in snake_case if not specified
 	Name *string `json:"name,omitempty"`
 	// Pointer indicates if this type should be used as a pointer
-	Pointer bool `json:"pointer,omitempty"`
+	Pointer *bool `json:"pointer,omitempty"`
 }
 
 // TypeConfig represents configuration for a single polymorphic type
