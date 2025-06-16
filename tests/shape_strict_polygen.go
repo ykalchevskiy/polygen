@@ -8,6 +8,14 @@ import (
 	"reflect"
 )
 
+var (
+	_ IsShape = Circle{}
+	_ IsShape = Empty{}
+	_ IsShape = (*Group)(nil)
+	_ IsShape = (*Polygon)(nil)
+	_ IsShape = Rectangle{}
+)
+
 // _ShapeStrictTypeRegistry maps concrete types to their type names
 var _ShapeStrictTypeRegistry = map[reflect.Type]string{
 	reflect.TypeOf((*Circle)(nil)).Elem():    "circle",

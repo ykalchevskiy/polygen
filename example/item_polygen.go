@@ -8,6 +8,11 @@ import (
 	"reflect"
 )
 
+var (
+	_ IsItem = (*ImageItem)(nil)
+	_ IsItem = TextItem{}
+)
+
 // _ItemTypeRegistry maps concrete types to their type names
 var _ItemTypeRegistry = map[reflect.Type]string{
 	reflect.TypeOf((*ImageItem)(nil)).Elem(): "image",

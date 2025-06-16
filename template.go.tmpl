@@ -8,6 +8,16 @@ import (
 	"reflect"
 )
 
+var (
+{{- range .Types}}
+{{- if .IsPointer}}
+	_ {{$.Interface}} = (*{{.SubType}})(nil)
+{{- else}}
+	_ {{$.Interface}} = {{.SubType}}{}
+{{- end}}
+{{- end}}
+)
+
 // _{{.Type}}TypeRegistry maps concrete types to their type names
 var _{{.Type}}TypeRegistry = map[reflect.Type]string{
 {{- range .Types}}
