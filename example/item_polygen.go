@@ -29,7 +29,7 @@ func (v Item) MarshalJSON() ([]byte, error) {
 		return nil, fmt.Errorf("marshaling IsItem implementation: %v", err)
 	}
 
-	typeName, err := getType(v.IsItem)
+	typeName, err := _ItemGetType(v.IsItem)
 	if err != nil {
 		return nil, fmt.Errorf("getting type for Item: %v", err)
 	}
@@ -66,7 +66,7 @@ func (v *Item) UnmarshalJSON(data []byte) error {
 	if typeData.Type == "" {
 		if v.IsItem != nil {
 			var err error
-			currTypeName, err = getType(v.IsItem)
+			currTypeName, err = _ItemGetType(v.IsItem)
 			if err != nil {
 				return fmt.Errorf("getting type for existing Item: %v", err)
 			}
@@ -118,7 +118,7 @@ func (v *Item) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func getType(v IsItem) (string, error) {
+func _ItemGetType(v IsItem) (string, error) {
 	t := reflect.TypeOf(v)
 	// Allows using a pointer as a value
 	if t.Kind() == reflect.Ptr {
