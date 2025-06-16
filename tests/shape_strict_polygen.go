@@ -56,27 +56,27 @@ func (v *ShapeStrict) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 
+	var currTypeName string
+	if v.IsShape != nil {
+		var err error
+		currTypeName, err = _ShapeStrictGetType(v.IsShape)
+		if err != nil {
+			return fmt.Errorf("getting type for existing ShapeStrict: %v", err)
+		}
+	}
+
 	// First decode just the type field
 	typeData := struct {
 		Type string `json:"type"`
-	}{}
+	}{
+		Type: currTypeName,
+	}
 	if err := json.Unmarshal(data, &typeData); err != nil {
 		return fmt.Errorf("unmarshaling ShapeStrict type field: %v", err)
 	}
 
-	var currTypeName string
-
 	if typeData.Type == "" {
-		if v.IsShape != nil {
-			var err error
-			currTypeName, err = _ShapeStrictGetType(v.IsShape)
-			if err != nil {
-				return fmt.Errorf("getting type for existing ShapeStrict: %v", err)
-			}
-			typeData.Type = currTypeName
-		} else {
-			return fmt.Errorf("missing type field in JSON for ShapeStrict")
-		}
+		return fmt.Errorf("missing type field in JSON for ShapeStrict")
 	}
 
 	typeName := typeData.Type
@@ -118,6 +118,8 @@ func (v *ShapeStrict) UnmarshalJSON(data []byte) error {
 		}{}
 		if currTypeName == "group" {
 			vv.Group = v.IsShape.(*Group)
+		} else {
+			vv.Group = new(Group)
 		}
 		decoder := json.NewDecoder(bytes.NewReader(data))
 		decoder.DisallowUnknownFields()
@@ -132,6 +134,8 @@ func (v *ShapeStrict) UnmarshalJSON(data []byte) error {
 		}{}
 		if currTypeName == "polygon" {
 			vv.Polygon = v.IsShape.(*Polygon)
+		} else {
+			vv.Polygon = new(Polygon)
 		}
 		decoder := json.NewDecoder(bytes.NewReader(data))
 		decoder.DisallowUnknownFields()

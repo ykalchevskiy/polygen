@@ -56,27 +56,27 @@ func (v *Shape) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 
+	var currTypeName string
+	if v.IsShape != nil {
+		var err error
+		currTypeName, err = _ShapeGetType(v.IsShape)
+		if err != nil {
+			return fmt.Errorf("getting type for existing Shape: %v", err)
+		}
+	}
+
 	// First decode just the type field
 	typeData := struct {
 		Type string `json:"type"`
-	}{}
+	}{
+		Type: currTypeName,
+	}
 	if err := json.Unmarshal(data, &typeData); err != nil {
 		return fmt.Errorf("unmarshaling Shape type field: %v", err)
 	}
 
-	var currTypeName string
-
 	if typeData.Type == "" {
-		if v.IsShape != nil {
-			var err error
-			currTypeName, err = _ShapeGetType(v.IsShape)
-			if err != nil {
-				return fmt.Errorf("getting type for existing Shape: %v", err)
-			}
-			typeData.Type = currTypeName
-		} else {
-			return fmt.Errorf("missing type field in JSON for Shape")
-		}
+		return fmt.Errorf("missing type field in JSON for Shape")
 	}
 
 	typeName := typeData.Type

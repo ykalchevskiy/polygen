@@ -229,11 +229,6 @@ var unmarshalTests = []testCase{
 		json: `{"type":"empty"}`,
 		want: Shape{IsShape: Empty{}},
 	},
-	{
-		name: "update existing value",
-		json: `{"Radius":10}`,
-		want: Shape{IsShape: Circle{Radius: 10.0}},
-	},
 }
 
 // Test cases that are specific to strict or non-strict mode
@@ -264,12 +259,6 @@ func runUnmarshalTests(t *testing.T, tests []testCase, isStrict bool) {
 			var err error
 			if isStrict {
 				var got ShapeStrict
-				if tt.name == "update existing value" {
-					// First unmarshal a circle, then update it
-					if err = json.Unmarshal([]byte(`{"type":"circle","Radius":5}`), &got); err != nil {
-						t.Fatalf("Failed to unmarshal initial value: %v", err)
-					}
-				}
 				err = json.Unmarshal([]byte(tt.json), &got)
 				if (err != nil) != tt.wantErr {
 					t.Errorf("ShapeStrict.UnmarshalJSON() error = %v, wantErr %v", err, tt.wantErr)
@@ -280,12 +269,6 @@ func runUnmarshalTests(t *testing.T, tests []testCase, isStrict bool) {
 				}
 			} else {
 				var got Shape
-				if tt.name == "update existing value" {
-					// First unmarshal a circle, then update it
-					if err = json.Unmarshal([]byte(`{"type":"circle","Radius":5}`), &got); err != nil {
-						t.Fatalf("Failed to unmarshal initial value: %v", err)
-					}
-				}
 				err = json.Unmarshal([]byte(tt.json), &got)
 				if (err != nil) != tt.wantErr {
 					t.Errorf("Shape.UnmarshalJSON() error = %v, wantErr %v", err, tt.wantErr)
@@ -400,5 +383,215 @@ func runJSONStreamDecoder(t *testing.T, isStrict bool) {
 	// Should be at EOF
 	if decoder.More() {
 		t.Error("Expected to be at EOF, but decoder.More() returned true")
+	}
+}
+
+func TestShapeUpdate(t *testing.T) {
+	tests := []struct {
+		name    string
+		initial string
+		update  string
+		want    Shape
+		wantErr bool
+	}{
+		{
+			name:    "update value type (circle)",
+			initial: `{"type":"circle","Radius":5}`,
+			update:  `{"type":"circle","Radius":10}`,
+			want:    Shape{IsShape: Circle{Radius: 10.0}},
+		},
+		{
+			name:    "update pointer type (group)",
+			initial: `{"type":"group","Name":"test","Attributes":{"active":true}}`,
+			update:  `{"type":"group","Name":"updated","Attributes":{"status":"ready"}}`,
+			want: Shape{IsShape: &Group{
+				Name: "updated",
+				Attributes: map[string]interface{}{
+					"active": true,
+					"status": "ready",
+				},
+			}},
+		},
+		{
+			name:    "update pointer type (polygon)",
+			initial: `{"type":"polygon","Points":[{"X":0,"Y":0}],"Labels":["A"]}`,
+			update:  `{"type":"polygon","Points":[{"X":1,"Y":1}],"Labels":["B"]}`,
+			want: Shape{IsShape: &Polygon{
+				Points: []struct{ X, Y float64 }{{X: 1, Y: 1}},
+				Labels: []string{"B"},
+			}},
+		},
+		{
+			name:    "update type field from value to value",
+			initial: `{"type":"circle","Radius":5}`,
+			update:  `{"type":"rectangle", "Width":10,"Height":20}`,
+			want: Shape{IsShape: Rectangle{
+				Width:  10.0,
+				Height: 20.0,
+			}},
+		},
+		{
+			name:    "update type field from value to value empty",
+			initial: `{"type":"circle","Radius":5}`,
+			update:  `{"type":"rectangle"}`,
+			want:    Shape{IsShape: Rectangle{}},
+		},
+		{
+			name:    "update type field from value to pointer",
+			initial: `{"type":"circle","Radius":5}`,
+			update:  `{"type":"polygon", "Points":[{"X":0,"Y":0}],"Labels":["A"]}`,
+			want: Shape{IsShape: &Polygon{
+				Points: []struct {
+					X float64
+					Y float64
+				}{{X: 0, Y: 0}},
+				Labels: []string{"A"}}},
+		},
+		{
+			name:    "update type field from value to pointer empty",
+			initial: `{"type":"circle","Radius":5}`,
+			update:  `{"type":"polygon"}`,
+			want:    Shape{IsShape: &Polygon{}},
+		},
+		{
+			name:    "update type field from pointer to value",
+			initial: `{"type":"group","Name":"test","Attributes":{"active":true}}`,
+			update:  `{"type":"circle","Radius":10}`,
+			want:    Shape{IsShape: Circle{Radius: 10.0}},
+		},
+		{
+			name:    "update type field from pointer to value empty",
+			initial: `{"type":"group","Name":"test","Attributes":{"active":true}}`,
+			update:  `{"type":"circle"}`,
+			want:    Shape{IsShape: Circle{}},
+		},
+		{
+			name:    "update type field from pointer to pointer",
+			initial: `{"type":"polygon","Points":[{"X":0,"Y":0}],"Labels":["A"]}`,
+			update:  `{"type":"group","Name":"updated","Attributes":{"status":"ready"}}`,
+			want: Shape{IsShape: &Group{
+				Name: "updated",
+				Attributes: map[string]interface{}{
+					"status": "ready",
+				},
+			}},
+		},
+		{
+			name:    "update type field from pointer to pointer empty",
+			initial: `{"type":"polygon","Points":[{"X":0,"Y":0}],"Labels":["A"]}`,
+			update:  `{"type":"group"}`,
+			want:    Shape{IsShape: &Group{}},
+		},
+		{
+			name:    "update with unknown type",
+			initial: `{"type":"circle","Radius":5}`,
+			update:  `{"type":"unknown"}`,
+			wantErr: true,
+		},
+		{
+			name:    "update with invalid JSON",
+			initial: `{"type":"circle","Radius":5}`,
+			update:  `{"type":"circle","Radius":10,`, // Invalid JSON
+			wantErr: true,
+		},
+		{
+			name:    "update with empty JSON value",
+			initial: `{"type":"circle","Radius":5}`,
+			update:  `{}`,                                // Empty JSON object
+			want:    Shape{IsShape: Circle{Radius: 5.0}}, // Should keep the original value
+		},
+		{
+			name:    "update with empty JSON pointer",
+			initial: `{"type":"group","Name":"updated","Attributes":{"status":"ready"}}`,
+			update:  `{}`, // Empty JSON object
+			want: Shape{IsShape: &Group{
+				Name: "updated",
+				Attributes: map[string]interface{}{
+					"status": "ready",
+				},
+			}},
+		},
+		{
+			name:    "update with null",
+			initial: `{"type":"circle","Radius":5}`,
+			update:  `null`, // Null value
+			want:    Shape{},
+		},
+		{
+			name:    "update without type value",
+			initial: `{"type":"circle","Radius":5}`,
+			update:  `{"type":""}`,
+			wantErr: true,
+		},
+		{
+			name:    "update without type pointer",
+			initial: `{"type":"polygon"}`,
+			update:  `{"type":""}`,
+			wantErr: true,
+		},
+		{
+			name:    "update without data value",
+			initial: `{"type":"circle","Radius":5}`,
+			update:  `{"Radius":10}`,
+			want:    Shape{IsShape: Circle{Radius: 10.0}}, // Should update the field
+		},
+		{
+			name:    "update without data pointer",
+			initial: `{"type":"group","Name":"updated","Attributes":{"status":"ready"}}`,
+			update:  `{"Attributes":{"visible":true}}`,
+			want: Shape{IsShape: &Group{
+				Name: "updated",
+				Attributes: map[string]interface{}{
+					"status":  "ready",
+					"visible": true,
+				},
+			}},
+		},
+	}
+
+	for _, mode := range []struct {
+		name     string
+		isStrict bool
+	}{
+		{"non-strict", false},
+		{"strict", true},
+	} {
+		t.Run(mode.name, func(t *testing.T) {
+			for _, tt := range tests {
+				t.Run(tt.name, func(t *testing.T) {
+					if mode.isStrict {
+						var err error
+
+						var got ShapeStrict
+						if err = json.Unmarshal([]byte(tt.initial), &got); err != nil {
+							t.Fatalf("Failed to unmarshal initial value: %v", err)
+						}
+						err = json.Unmarshal([]byte(tt.update), &got)
+						if (err != nil) != tt.wantErr {
+							t.Errorf("UnmarshalJSON() error = %v, wantErr %v", err, tt.wantErr)
+							return
+						}
+						if err == nil && !reflect.DeepEqual(got.IsShape, tt.want.IsShape) {
+							t.Errorf("UnmarshalJSON() = %+v, want %+v", got.IsShape, tt.want.IsShape)
+						}
+					} else {
+						var err error
+
+						var got Shape
+						if err = json.Unmarshal([]byte(tt.initial), &got); err != nil {
+							t.Fatalf("Failed to unmarshal initial value: %v", err)
+						}
+						err = json.Unmarshal([]byte(tt.update), &got)
+						if (err != nil) != tt.wantErr {
+							t.Errorf("UnmarshalJSON() error = %v, wantErr %v", err, tt.wantErr)
+							return
+						}
+						if err == nil && !reflect.DeepEqual(got.IsShape, tt.want.IsShape) {
+							t.Errorf("UnmarshalJSON() = %+v, want %+v", got.IsShape, tt.want.IsShape)
+						}
+					}
+				})
+			}
+		})
 	}
 }

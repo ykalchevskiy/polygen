@@ -53,27 +53,27 @@ func (v *Item) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 
+	var currTypeName string
+	if v.IsItem != nil {
+		var err error
+		currTypeName, err = _ItemGetType(v.IsItem)
+		if err != nil {
+			return fmt.Errorf("getting type for existing Item: %v", err)
+		}
+	}
+
 	// First decode just the type field
 	typeData := struct {
 		Type string `json:"kind"`
-	}{}
+	}{
+		Type: currTypeName,
+	}
 	if err := json.Unmarshal(data, &typeData); err != nil {
 		return fmt.Errorf("unmarshaling Item type field: %v", err)
 	}
 
-	var currTypeName string
-
 	if typeData.Type == "" {
-		if v.IsItem != nil {
-			var err error
-			currTypeName, err = _ItemGetType(v.IsItem)
-			if err != nil {
-				return fmt.Errorf("getting type for existing Item: %v", err)
-			}
-			typeData.Type = currTypeName
-		} else {
-			return fmt.Errorf("missing kind field in JSON for Item")
-		}
+		return fmt.Errorf("missing kind field in JSON for Item")
 	}
 
 	typeName := typeData.Type
@@ -87,6 +87,8 @@ func (v *Item) UnmarshalJSON(data []byte) error {
 		}{}
 		if currTypeName == "image" {
 			vv.ImageItem = v.IsItem.(*ImageItem)
+		} else {
+			vv.ImageItem = new(ImageItem)
 		}
 		decoder := json.NewDecoder(bytes.NewReader(data))
 		decoder.DisallowUnknownFields()

@@ -54,27 +54,27 @@ func (v *{{.Type}}) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 
+	var currTypeName string
+	if v.{{.Interface}} != nil {
+		var err error
+		currTypeName, err = _{{.Type}}GetType(v.{{.Interface}})
+		if err != nil {
+			return fmt.Errorf("getting type for existing {{.Type}}: %v", err)
+		}
+	}
+
 	// First decode just the type field
 	typeData := struct {
 		Type string `json:"{{.Descriptor}}"`
-	}{}
+	}{
+		Type: currTypeName,
+	}
 	if err := json.Unmarshal(data, &typeData); err != nil {
 		return fmt.Errorf("unmarshaling {{.Type}} type field: %v", err)
 	}
 
-	var currTypeName string
-
 	if typeData.Type == "" {
-		if v.{{.Interface}} != nil {
-			var err error
-			currTypeName, err = _{{.Type}}GetType(v.{{.Interface}})
-			if err != nil {
-				return fmt.Errorf("getting type for existing {{.Type}}: %v", err)
-			}
-			typeData.Type = currTypeName
-		} else {
-			return fmt.Errorf("missing {{.Descriptor}} field in JSON for {{.Type}}")
-		}
+		return fmt.Errorf("missing {{.Descriptor}} field in JSON for {{.Type}}")
 	}
 
  	typeName := typeData.Type
@@ -94,7 +94,10 @@ func (v *{{.Type}}) UnmarshalJSON(data []byte) error {
 				{{- else}}
 				vv.{{.SubType}} = v.{{$.Interface}}.({{.SubType}})
 				{{- end}}
+			} {{ if .IsPointer}} else {
+				vv.{{.SubType}} = new({{.SubType}})
 			}
+			{{- end}}
 			decoder := json.NewDecoder(bytes.NewReader(data))
 			decoder.DisallowUnknownFields()
 			if err := decoder.Decode(&vv); err != nil {
