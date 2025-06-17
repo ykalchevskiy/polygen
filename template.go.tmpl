@@ -40,6 +40,10 @@ func (v {{.Type}}) MarshalJSON() ([]byte, error) {
 		return nil, fmt.Errorf("marshaling {{.Interface}} implementation: %v", err)
 	}
 
+	if bytes.Equal(implData, []byte("null")) {
+		return implData, nil
+ 	}
+
 	typeName, _, err := _{{.Type}}GetType(v.{{.Interface}})
 	if err != nil {
 		return nil, fmt.Errorf("getting type for {{.Type}}: %v", err)

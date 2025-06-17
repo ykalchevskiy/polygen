@@ -69,6 +69,11 @@ var marshalTests = []struct {
 		want:  "null",
 	},
 	{
+		name:  "nil interface",
+		shape: Shape{IsShape: (*Group)(nil)},
+		want:  "null",
+	},
+	{
 		name:  "empty type",
 		shape: Shape{IsShape: Empty{}},
 		want:  `{"type":"empty"}`,

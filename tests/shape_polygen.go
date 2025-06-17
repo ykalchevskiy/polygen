@@ -40,6 +40,10 @@ func (v Shape) MarshalJSON() ([]byte, error) {
 		return nil, fmt.Errorf("marshaling IsShape implementation: %v", err)
 	}
 
+	if bytes.Equal(implData, []byte("null")) {
+		return implData, nil
+	}
+
 	typeName, _, err := _ShapeGetType(v.IsShape)
 	if err != nil {
 		return nil, fmt.Errorf("getting type for Shape: %v", err)

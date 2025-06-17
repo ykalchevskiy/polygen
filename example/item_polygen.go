@@ -34,6 +34,10 @@ func (v Item) MarshalJSON() ([]byte, error) {
 		return nil, fmt.Errorf("marshaling IsItem implementation: %v", err)
 	}
 
+	if bytes.Equal(implData, []byte("null")) {
+		return implData, nil
+	}
+
 	typeName, _, err := _ItemGetType(v.IsItem)
 	if err != nil {
 		return nil, fmt.Errorf("getting type for Item: %v", err)
