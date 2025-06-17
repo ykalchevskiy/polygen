@@ -24,4 +24,15 @@ jobs:
         cache: true
 
     - name: Run tests
-      run: go test -v ./... -count 2
+      run: |
+        // generate code
+        go generate ./...
+
+        // fail if there are any changes in the generated files
+        if ! git diff --exit-code; then
+          echo "Generated files have changed. Please run 'go generate ./...' and commit the changes."
+          exit 1
+        fi
+
+        // run tests
+        go test -v ./...

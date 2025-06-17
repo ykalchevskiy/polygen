@@ -3,27 +3,12 @@ package tests
 import (
 	"bytes"
 	"encoding/json"
-	"os"
-	"os/exec"
 	"reflect"
 	"strings"
 	"testing"
 )
 
-func TestMain(m *testing.M) {
-	// Run polygen to generate test types
-	genCmd := exec.Command("go", "run", "..")
-	genCmd.Dir = "." // Run in tests directory
-	if err := genCmd.Run(); err != nil {
-		panic("failed to run polygen: " + err.Error())
-	}
-
-	// Run tests
-	code := m.Run()
-
-	// Exit with test result code
-	os.Exit(code)
-}
+//go:generate go run ..
 
 var marshalTests = []struct {
 	name    string
@@ -632,4 +617,133 @@ func TestShapeSettability(t *testing.T) {
 			t.Errorf("Expected pointer name to be updated, got: %s", pointer.IsShape.(*Group).Name)
 		}
 	})
+}
+
+func TestShape(t *testing.T) {
+	t.Run("non_strict/value for value type", func(t *testing.T) {
+		shape := Shape{IsShape: Circle{Radius: 5.0}}
+		data, err := json.Marshal(shape)
+		if err != nil {
+			t.Fatalf("Failed to marshal value type: %v", err)
+		}
+		expected := `{"type":"circle","Radius":5}`
+		if string(data) != expected {
+			t.Errorf("Expected %s, got %s", expected, string(data))
+		}
+
+		if err := json.Unmarshal([]byte(`{"type":"circle", "Radius":10}`), &shape); err != nil {
+			t.Fatalf("Failed to unmarshal value type: %v", err)
+		}
+		if shape.IsShape.(Circle).Radius != 10.0 {
+			t.Errorf("Expected radius to be 10.0, got %f", shape.IsShape.(Circle).Radius)
+		}
+	})
+
+	t.Run("strict/value for value type", func(t *testing.T) {
+		shape := ShapeStrict{IsShape: Circle{Radius: 5.0}}
+		data, err := json.Marshal(shape)
+		if err != nil {
+			t.Fatalf("Failed to marshal value type: %v", err)
+		}
+		expected := `{"type":"circle","Radius":5}`
+		if string(data) != expected {
+			t.Errorf("Expected %s, got %s", expected, string(data))
+		}
+
+		if err := json.Unmarshal([]byte(`{"type":"circle", "Radius":10}`), &shape); err != nil {
+			t.Fatalf("Failed to unmarshal value type: %v", err)
+		}
+		if shape.IsShape.(Circle).Radius != 10.0 {
+			t.Errorf("Expected radius to be 10.0, got %f", shape.IsShape.(Circle).Radius)
+		}
+	})
+
+	t.Run("non_strict/pointer for value type", func(t *testing.T) {
+		shape := Shape{IsShape: &Circle{Radius: 5.0}}
+		data, err := json.Marshal(shape)
+		if err != nil {
+			t.Fatalf("Failed to marshal value type: %v", err)
+		}
+		expected := `{"type":"circle","Radius":5}`
+		if string(data) != expected {
+			t.Errorf("Expected %s, got %s", expected, string(data))
+		}
+
+		if err := json.Unmarshal([]byte(`{"type":"circle", "Radius":10}`), &shape); err != nil {
+			t.Fatalf("Failed to unmarshal value type: %v", err)
+		}
+		if shape.IsShape.(*Circle).Radius != 10.0 {
+			t.Errorf("Expected radius to be 10.0, got %f", shape.IsShape.(*Circle).Radius)
+		}
+	})
+
+	t.Run("strict/pointer for value type", func(t *testing.T) {
+		shape := ShapeStrict{IsShape: &Circle{Radius: 5.0}}
+		data, err := json.Marshal(shape)
+		if err != nil {
+			t.Fatalf("Failed to marshal value type: %v", err)
+		}
+		expected := `{"type":"circle","Radius":5}`
+		if string(data) != expected {
+			t.Errorf("Expected %s, got %s", expected, string(data))
+		}
+
+		if err := json.Unmarshal([]byte(`{"type":"circle", "Radius":10}`), &shape); err != nil {
+			t.Fatalf("Failed to unmarshal value type: %v", err)
+		}
+		if shape.IsShape.(*Circle).Radius != 10.0 {
+			t.Errorf("Expected radius to be 10.0, got %f", shape.IsShape.(*Circle).Radius)
+		}
+	})
+
+	t.Run("non_strict/pointer for pointer type", func(t *testing.T) {
+		shape := Shape{IsShape: &Group{
+			Name: "test",
+			Attributes: map[string]interface{}{
+				"active": true,
+			},
+		}}
+
+		data, err := json.Marshal(shape)
+		if err != nil {
+			t.Fatalf("Failed to marshal pointer type: %v", err)
+		}
+		expected := `{"type":"group","Name":"test","Attributes":{"active":true}}`
+		if string(data) != expected {
+			t.Errorf("Expected %s, got %s", expected, string(data))
+		}
+
+		if err := json.Unmarshal([]byte(`{"type":"group", "Name":"updated"}`), &shape); err != nil {
+			t.Fatalf("Failed to unmarshal pointer type: %v", err)
+		}
+		if shape.IsShape.(*Group).Name != "updated" {
+			t.Errorf("Expected name to be 'updated', got: %s", shape.IsShape.(*Group).Name)
+		}
+	})
+
+	t.Run("strict/pointer for pointer type", func(t *testing.T) {
+		shape := ShapeStrict{IsShape: &Group{
+			Name: "test",
+			Attributes: map[string]interface{}{
+				"active": true,
+			},
+		}}
+
+		data, err := json.Marshal(shape)
+		if err != nil {
+			t.Fatalf("Failed to marshal pointer type: %v", err)
+		}
+		expected := `{"type":"group","Name":"test","Attributes":{"active":true}}`
+		if string(data) != expected {
+			t.Errorf("Expected %s, got %s", expected, string(data))
+		}
+
+		if err := json.Unmarshal([]byte(`{"type":"group", "Name":"updated"}`), &shape); err != nil {
+			t.Fatalf("Failed to unmarshal pointer type: %v", err)
+		}
+		if shape.IsShape.(*Group).Name != "updated" {
+			t.Errorf("Expected name to be 'updated', got: %s", shape.IsShape.(*Group).Name)
+		}
+	})
+
 }

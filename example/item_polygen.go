@@ -15,8 +15,8 @@ var (
 
 // _ItemTypeRegistry maps concrete types to their type names
 var _ItemTypeRegistry = map[reflect.Type]string{
-	reflect.TypeOf((*ImageItem)(nil)).Elem(): "image",
-	reflect.TypeOf((*TextItem)(nil)).Elem():  "text",
+	reflect.TypeOf((*ImageItem)(nil)):       "image",
+	reflect.TypeOf((*TextItem)(nil)).Elem(): "text",
 }
 
 type Item struct {
@@ -34,7 +34,7 @@ func (v Item) MarshalJSON() ([]byte, error) {
 		return nil, fmt.Errorf("marshaling IsItem implementation: %v", err)
 	}
 
-	typeName, err := _ItemGetType(v.IsItem)
+	typeName, _, err := _ItemGetType(v.IsItem)
 	if err != nil {
 		return nil, fmt.Errorf("getting type for Item: %v", err)
 	}
@@ -59,13 +59,15 @@ func (v *Item) UnmarshalJSON(data []byte) error {
 	}
 
 	var currTypeName string
+	var currTypeAsPointer bool
 	if v.IsItem != nil {
 		var err error
-		currTypeName, err = _ItemGetType(v.IsItem)
+		currTypeName, currTypeAsPointer, err = _ItemGetType(v.IsItem)
 		if err != nil {
 			return fmt.Errorf("getting type for existing Item: %v", err)
 		}
 	}
+	_ = currTypeAsPointer // In case of all subtypes being pointers, we must just ignore this
 
 	// First decode just the type field
 	typeData := struct {
@@ -86,35 +88,70 @@ func (v *Item) UnmarshalJSON(data []byte) error {
 	var value IsItem
 	switch typeName {
 	case "image":
-		vv := struct {
-			*ImageItem
-			Type string `json:"kind"`
-		}{}
 		if currTypeName == "image" {
+			vv := struct {
+				*ImageItem
+				Type string `json:"kind"`
+			}{}
 			vv.ImageItem = v.IsItem.(*ImageItem)
+			decoder := json.NewDecoder(bytes.NewReader(data))
+			decoder.DisallowUnknownFields()
+			if err := decoder.Decode(&vv); err != nil {
+				return fmt.Errorf("unmarshaling Item as ImageItem: %v", err)
+			}
+			value = vv.ImageItem
 		} else {
+			vv := struct {
+				*ImageItem
+				Type string `json:"kind"`
+			}{}
 			vv.ImageItem = new(ImageItem)
+			decoder := json.NewDecoder(bytes.NewReader(data))
+			decoder.DisallowUnknownFields()
+			if err := decoder.Decode(&vv); err != nil {
+				return fmt.Errorf("unmarshaling Item as ImageItem: %v", err)
+			}
+			value = vv.ImageItem
 		}
-		decoder := json.NewDecoder(bytes.NewReader(data))
-		decoder.DisallowUnknownFields()
-		if err := decoder.Decode(&vv); err != nil {
-			return fmt.Errorf("unmarshaling Item as ImageItem: %v", err)
-		}
-		value = vv.ImageItem
 	case "text":
-		vv := struct {
-			TextItem
-			Type string `json:"kind"`
-		}{}
 		if currTypeName == "text" {
-			vv.TextItem = v.IsItem.(TextItem)
+			if currTypeAsPointer {
+				vv := struct {
+					*TextItem
+					Type string `json:"kind"`
+				}{}
+				vv.TextItem = v.IsItem.(*TextItem)
+				decoder := json.NewDecoder(bytes.NewReader(data))
+				decoder.DisallowUnknownFields()
+				if err := decoder.Decode(&vv); err != nil {
+					return fmt.Errorf("unmarshaling Item as TextItem: %v", err)
+				}
+				value = vv.TextItem
+			} else {
+				vv := struct {
+					TextItem
+					Type string `json:"kind"`
+				}{}
+				vv.TextItem = v.IsItem.(TextItem)
+				decoder := json.NewDecoder(bytes.NewReader(data))
+				decoder.DisallowUnknownFields()
+				if err := decoder.Decode(&vv); err != nil {
+					return fmt.Errorf("unmarshaling Item as TextItem: %v", err)
+				}
+				value = vv.TextItem
+			}
+		} else {
+			vv := struct {
+				TextItem
+				Type string `json:"kind"`
+			}{}
+			decoder := json.NewDecoder(bytes.NewReader(data))
+			decoder.DisallowUnknownFields()
+			if err := decoder.Decode(&vv); err != nil {
+				return fmt.Errorf("unmarshaling Item as TextItem: %v", err)
+			}
+			value = vv.TextItem
 		}
-		decoder := json.NewDecoder(bytes.NewReader(data))
-		decoder.DisallowUnknownFields()
-		if err := decoder.Decode(&vv); err != nil {
-			return fmt.Errorf("unmarshaling Item as TextItem: %v", err)
-		}
-		value = vv.TextItem
 	default:
 		return fmt.Errorf("unknown Item type: %s", typeName)
 	}
@@ -125,15 +162,18 @@ func (v *Item) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func _ItemGetType(v IsItem) (string, error) {
+func _ItemGetType(v IsItem) (name string, asPointer bool, _ error) {
 	t := reflect.TypeOf(v)
-	// Allows using a pointer as a value
-	if t.Kind() == reflect.Ptr {
-		t = t.Elem()
-	}
 	typeName, ok := _ItemTypeRegistry[t]
-	if !ok {
-		return "", fmt.Errorf("unknown type for Item: %v", t)
+	if ok {
+		return typeName, false, nil
 	}
-	return typeName, nil
+	// A pointer can be manually used for a value type as it also implements the interface
+	if t.Kind() == reflect.Ptr {
+		typeName, ok = _ItemTypeRegistry[t.Elem()]
+		if ok {
+			return typeName, true, nil
+		}
+	}
+	return "", false, fmt.Errorf("unknown subtype for Item: %v", t)
 }

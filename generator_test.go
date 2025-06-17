@@ -302,8 +302,8 @@ func TestConfig(t *testing.T) {
 			`"type", typeName`,
 			`case "sub-type1":`,
 			`case "sub-type2":`,
-			`reflect.TypeOf((*SubType1)(nil)).Elem()`,
-			`reflect.TypeOf((*SubType2)(nil)).Elem()`,
+			`reflect.TypeOf((*SubType1)(nil)).Elem():`,
+			`reflect.TypeOf((*SubType2)(nil)):`,
 		}
 
 		for _, r := range required {
@@ -315,11 +315,11 @@ func TestConfig(t *testing.T) {
 	})
 
 	t.Run("custom values", func(t *testing.T) {
-		isPointerTrue := true
 		subType1Name := "my-subtype-1"
 		config := FileConfig{
 			DefaultDescriptor: "kind",
 			StrictByDefault:   true,
+			PointerByDefault:  true,
 			Types: []TypeConfig{
 				{
 					Type:      "TestType",
@@ -330,9 +330,7 @@ func TestConfig(t *testing.T) {
 						"SubType1": {
 							Name: &subType1Name,
 						},
-						"SubType2": {
-							Pointer: &isPointerTrue,
-						},
+						"SubType2": {},
 					},
 				},
 			},
@@ -386,8 +384,8 @@ func TestConfig(t *testing.T) {
 			`"kind", typeName`,
 			`case "my-subtype-1":`,
 			`case "sub-type2":`,
-			`reflect.TypeOf((*SubType1)(nil)).Elem()`,
-			`reflect.TypeOf((*SubType2)(nil)).Elem()`,
+			`reflect.TypeOf((*SubType1)(nil)):`,
+			`reflect.TypeOf((*SubType2)(nil)):`,
 			"decoder.DisallowUnknownFields()",
 		}
 

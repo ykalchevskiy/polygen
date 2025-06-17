@@ -20,8 +20,8 @@ var (
 var _ShapeTypeRegistry = map[reflect.Type]string{
 	reflect.TypeOf((*Circle)(nil)).Elem():    "circle",
 	reflect.TypeOf((*Empty)(nil)).Elem():     "empty",
-	reflect.TypeOf((*Group)(nil)).Elem():     "group",
-	reflect.TypeOf((*Polygon)(nil)).Elem():   "polygon",
+	reflect.TypeOf((*Group)(nil)):            "group",
+	reflect.TypeOf((*Polygon)(nil)):          "polygon",
 	reflect.TypeOf((*Rectangle)(nil)).Elem(): "rectangle",
 }
 
@@ -40,7 +40,7 @@ func (v Shape) MarshalJSON() ([]byte, error) {
 		return nil, fmt.Errorf("marshaling IsShape implementation: %v", err)
 	}
 
-	typeName, err := _ShapeGetType(v.IsShape)
+	typeName, _, err := _ShapeGetType(v.IsShape)
 	if err != nil {
 		return nil, fmt.Errorf("getting type for Shape: %v", err)
 	}
@@ -65,13 +65,15 @@ func (v *Shape) UnmarshalJSON(data []byte) error {
 	}
 
 	var currTypeName string
+	var currTypeAsPointer bool
 	if v.IsShape != nil {
 		var err error
-		currTypeName, err = _ShapeGetType(v.IsShape)
+		currTypeName, currTypeAsPointer, err = _ShapeGetType(v.IsShape)
 		if err != nil {
 			return fmt.Errorf("getting type for existing Shape: %v", err)
 		}
 	}
+	_ = currTypeAsPointer // In case of all subtypes being pointers, we must just ignore this
 
 	// First decode just the type field
 	typeData := struct {
@@ -92,50 +94,99 @@ func (v *Shape) UnmarshalJSON(data []byte) error {
 	var value IsShape
 	switch typeName {
 	case "circle":
-		var vv Circle
 		if currTypeName == "circle" {
-			vv = v.IsShape.(Circle)
+			if currTypeAsPointer {
+				vv := v.IsShape.(*Circle)
+				if err := json.Unmarshal(data, &vv); err != nil {
+					return fmt.Errorf("unmarshaling Shape as Circle: %v", err)
+				}
+				value = vv
+			} else {
+				vv := v.IsShape.(Circle)
+				if err := json.Unmarshal(data, &vv); err != nil {
+					return fmt.Errorf("unmarshaling Shape as Circle: %v", err)
+				}
+				value = vv
+			}
+		} else {
+			var vv Circle
+			if err := json.Unmarshal(data, &vv); err != nil {
+				return fmt.Errorf("unmarshaling Shape as Circle: %v", err)
+			}
+			value = vv
 		}
-		if err := json.Unmarshal(data, &vv); err != nil {
-			return fmt.Errorf("unmarshaling Shape as Circle: %v", err)
-		}
-		value = vv
 	case "empty":
-		var vv Empty
 		if currTypeName == "empty" {
-			vv = v.IsShape.(Empty)
+			if currTypeAsPointer {
+				vv := v.IsShape.(*Empty)
+				if err := json.Unmarshal(data, &vv); err != nil {
+					return fmt.Errorf("unmarshaling Shape as Empty: %v", err)
+				}
+				value = vv
+			} else {
+				vv := v.IsShape.(Empty)
+				if err := json.Unmarshal(data, &vv); err != nil {
+					return fmt.Errorf("unmarshaling Shape as Empty: %v", err)
+				}
+				value = vv
+			}
+		} else {
+			var vv Empty
+			if err := json.Unmarshal(data, &vv); err != nil {
+				return fmt.Errorf("unmarshaling Shape as Empty: %v", err)
+			}
+			value = vv
 		}
-		if err := json.Unmarshal(data, &vv); err != nil {
-			return fmt.Errorf("unmarshaling Shape as Empty: %v", err)
-		}
-		value = vv
 	case "group":
-		var vv *Group
 		if currTypeName == "group" {
-			vv = v.IsShape.(*Group)
+			vv := v.IsShape.(*Group)
+			if err := json.Unmarshal(data, &vv); err != nil {
+				return fmt.Errorf("unmarshaling Shape as Group: %v", err)
+			}
+			value = vv
+		} else {
+			var vv *Group
+			if err := json.Unmarshal(data, &vv); err != nil {
+				return fmt.Errorf("unmarshaling Shape as Group: %v", err)
+			}
+			value = vv
 		}
-		if err := json.Unmarshal(data, &vv); err != nil {
-			return fmt.Errorf("unmarshaling Shape as Group: %v", err)
-		}
-		value = vv
 	case "polygon":
-		var vv *Polygon
 		if currTypeName == "polygon" {
-			vv = v.IsShape.(*Polygon)
+			vv := v.IsShape.(*Polygon)
+			if err := json.Unmarshal(data, &vv); err != nil {
+				return fmt.Errorf("unmarshaling Shape as Polygon: %v", err)
+			}
+			value = vv
+		} else {
+			var vv *Polygon
+			if err := json.Unmarshal(data, &vv); err != nil {
+				return fmt.Errorf("unmarshaling Shape as Polygon: %v", err)
+			}
+			value = vv
 		}
-		if err := json.Unmarshal(data, &vv); err != nil {
-			return fmt.Errorf("unmarshaling Shape as Polygon: %v", err)
-		}
-		value = vv
 	case "rectangle":
-		var vv Rectangle
 		if currTypeName == "rectangle" {
-			vv = v.IsShape.(Rectangle)
+			if currTypeAsPointer {
+				vv := v.IsShape.(*Rectangle)
+				if err := json.Unmarshal(data, &vv); err != nil {
+					return fmt.Errorf("unmarshaling Shape as Rectangle: %v", err)
+				}
+				value = vv
+			} else {
+				vv := v.IsShape.(Rectangle)
+				if err := json.Unmarshal(data, &vv); err != nil {
+					return fmt.Errorf("unmarshaling Shape as Rectangle: %v", err)
+				}
+				value = vv
+			}
+		} else {
+			var vv Rectangle
+			if err := json.Unmarshal(data, &vv); err != nil {
+				return fmt.Errorf("unmarshaling Shape as Rectangle: %v", err)
+			}
+			value = vv
 		}
-		if err := json.Unmarshal(data, &vv); err != nil {
-			return fmt.Errorf("unmarshaling Shape as Rectangle: %v", err)
-		}
-		value = vv
 	default:
 		return fmt.Errorf("unknown Shape type: %s", typeName)
 	}
@@ -146,15 +197,18 @@ func (v *Shape) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func _ShapeGetType(v IsShape) (string, error) {
+func _ShapeGetType(v IsShape) (name string, asPointer bool, _ error) {
 	t := reflect.TypeOf(v)
-	// Allows using a pointer as a value
-	if t.Kind() == reflect.Ptr {
-		t = t.Elem()
-	}
 	typeName, ok := _ShapeTypeRegistry[t]
-	if !ok {
-		return "", fmt.Errorf("unknown type for Shape: %v", t)
+	if ok {
+		return typeName, false, nil
 	}
-	return typeName, nil
+	// A pointer can be manually used for a value type as it also implements the interface
+	if t.Kind() == reflect.Ptr {
+		typeName, ok = _ShapeTypeRegistry[t.Elem()]
+		if ok {
+			return typeName, true, nil
+		}
+	}
+	return "", false, fmt.Errorf("unknown subtype for Shape: %v", t)
 }

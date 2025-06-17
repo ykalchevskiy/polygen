@@ -7,7 +7,7 @@ import (
 	"reflect"
 )
 
-//go:generate go run github.com/ykalchevskiy/polygen
+//go:generate go run ..
 
 type IsItem interface {
 	isItem()
@@ -28,8 +28,35 @@ type ImageItem struct {
 func (*ImageItem) isItem() {}
 
 func main() {
+	i := Item{
+		IsItem: &TextItem{Content: "Hello, World!"},
+	}
+	b, err := json.Marshal(i)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(string(b)) // {"kind":"text","content":"Hello, World!"}
+
+	if err := json.Unmarshal([]byte(`{"content": "Hello, World!2"}`), &i); err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(i)
+	fmt.Println(i.IsItem) // {Hello, World!2}
+
+	if err := json.Unmarshal([]byte(`{"kind":"text","content": "Hello, World!3"}`), &i); err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(i)
+	fmt.Println(i.IsItem) // {Hello, World!3}
+
+	if err := json.Unmarshal([]byte(`{"kind": "image", "width": 700}`), &i); err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(i)
+	fmt.Println(i.IsItem)
+
 	var item Item
-	json.Unmarshal([]byte(`{"kind": "image", "width": 800}`), &item) // Changes type to ImageItem
+	json.Unmarshal([]byte(`{"kind": "image"}`), &item)
 	fmt.Println(item.IsItem)
 	json.Unmarshal([]byte(`{"kind": "text", "content": "hello"}`), &item)
 	fmt.Println(item.IsItem)
