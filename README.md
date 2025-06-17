@@ -6,27 +6,38 @@
 
 A Go code generator for creating polymorphic data structures with JSON serialization support.
 
-## Installation
+## Example
 
-```bash
-go install github.com/ykalchevskiy/polygen@latest
+Given the following Go code:
+
+```go
+type IsItem interface {
+    isItem()
+}
+
+type TextItem struct {
+    Content string `json:"content"`
+}
+
+func (TextItem) isItem() {}
+
+type ImageItem struct {
+    URL    string `json:"url"`
+}
+
+func (*ImageItem) isItem() {}
 ```
-
-## Usage
 
 Create a `.polygen.json` file in your project root:
 
 ```json
 {
     "$schema": "https://raw.githubusercontent.com/ykalchevskiy/polygen/main/schema.json",
-    "strictByDefault": true,
-    "defaultDescriptor": "kind",
     "types": [
         {
             "type": "Item",
             "interface": "IsItem",
             "package": "main",
-            "directory": "pkg",
             "subtypes": {
                 "TextItem": {
                     "name": "text"
@@ -47,24 +58,45 @@ Then run:
 polygen
 ```
 
+The generated code allows you to marshal/unmarshal your types to/from JSON:
+
+```go
+// unmarshaling
+var item Item
+json.Unmarshal([]byte(`{"type": "text", "content": "hello"}`), &item)
+json.Unmarshal([]byte(`{"content": "updated"}`), &item)  // Updates just content
+json.Unmarshal([]byte(`{"type": "image", "url": "pic.jpg"}`), &item)  // Changes type
+
+
+// marshaling
+json.Marshal(Item{IsItem: TextItem{Content: "Hello, World!"}})
+// {"type": "text", "content": "Hello, World!"}
+json.Marshal(Item{IsItem: &ImageItem{URL: "https://example.com/image.jpg"}})
+// {"type": "image", "url": "https://example.com/image.jpg"}
+```
+
+## Installation
+
+```bash
+go install github.com/ykalchevskiy/polygen@latest
+```
+
 ## Configuration
 
 The JSON configuration file supports:
 
 - Multiple type definitions in a single file
-- Global and per-type strict mode settings
-- Global and per-subtype strict mode settings
 - Global and per-type descriptor field name
-- Simpler subtype configuration with pointer settings
+- Global and per-type strict mode settings
+- Global and per-subtype pointer mode settings
 - Custom output paths relative to config file
-- Default kebab-case type names for subtypes
 
 ### Schema
 
 The configuration follows this structure:
 
 - `strictByDefault` (optional): Enable strict mode by default
-- `pointerByDefault` (optional): Enable pointer mode by default
+- `pointerByDefault` (optional): Mark all subtypes as pointer mode by default
 - `defaultDescriptor` (optional): Default JSON field name for type discrimination (default: "type")
 - `types` (required): Array of type configurations:
   - `type` (required): Name of the polymorphic structure
@@ -77,61 +109,3 @@ The configuration follows this structure:
   - `subtypes` (required): Map of Go type names to their configurations:
     - `name` (optional): JSON type name (defaults to subtype name in kebab-case)
     - `pointer` (optional): Use pointer for this type (defaults to `pointerByDefault`)
-
-## Features
-
-- Type-safe polymorphic structs with JSON serialization
-- Customizable type discriminator field name
-- Support for both pointer and value types
-- Strict mode for JSON unmarshaling
-- Support for patching/updating fields without specifying type
-- Automatic type preservation when patching existing values
-- Default kebab-case type names for cleaner JSON
-
-## Example
-
-Given the following Go code:
-
-```go
-type IsItem interface {
-    isItem()
-}
-
-type TextItem struct {
-    Content string
-}
-
-func (TextItem) isItem() {}
-
-type ImageItem struct {
-    URL    string
-    Width  int
-    Height int
-}
-
-func (ImageItem) isItem() {}
-```
-
-The generated code allows you to marshal/unmarshal your types to/from JSON:
-
-```go
-// Creating new values
-items := []Item{
-    {IsItem: TextItem{Content: "Hello, World!"}},
-    {IsItem: ImageItem{URL: "https://example.com/image.jpg"}},
-}
-
-// Marshaling to JSON
-// {"kind": "text", "content": "Hello, World!"}
-// {"kind": "image", "url": "https://example.com/image.jpg"}
-
-// Unmarshaling with type changes
-var item Item
-json.Unmarshal([]byte(`{"kind": "text", "content": "hello"}`), &item)
-json.Unmarshal([]byte(`{"content": "updated"}`), &item)  // Updates just content
-json.Unmarshal([]byte(`{"kind": "image", "url": "pic.jpg"}`), &item)  // Changes type
-```
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
