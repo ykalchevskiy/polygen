@@ -88,31 +88,21 @@ func (v *Item) UnmarshalJSON(data []byte) error {
 	var value IsItem
 	switch typeName {
 	case "image":
+		vv := struct {
+			*ImageItem
+			Type string `json:"kind"`
+		}{}
 		if currTypeName == "image" {
-			vv := struct {
-				*ImageItem
-				Type string `json:"kind"`
-			}{}
 			vv.ImageItem = v.IsItem.(*ImageItem)
-			decoder := json.NewDecoder(bytes.NewReader(data))
-			decoder.DisallowUnknownFields()
-			if err := decoder.Decode(&vv); err != nil {
-				return fmt.Errorf("unmarshaling Item as ImageItem: %v", err)
-			}
-			value = vv.ImageItem
 		} else {
-			vv := struct {
-				*ImageItem
-				Type string `json:"kind"`
-			}{}
 			vv.ImageItem = new(ImageItem)
-			decoder := json.NewDecoder(bytes.NewReader(data))
-			decoder.DisallowUnknownFields()
-			if err := decoder.Decode(&vv); err != nil {
-				return fmt.Errorf("unmarshaling Item as ImageItem: %v", err)
-			}
-			value = vv.ImageItem
 		}
+		decoder := json.NewDecoder(bytes.NewReader(data))
+		decoder.DisallowUnknownFields()
+		if err := decoder.Decode(&vv); err != nil {
+			return fmt.Errorf("unmarshaling Item as ImageItem: %v", err)
+		}
+		value = vv.ImageItem
 	case "text":
 		if currTypeName == "text" {
 			if currTypeAsPointer {

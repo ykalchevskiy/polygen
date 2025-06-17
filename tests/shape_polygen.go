@@ -138,33 +138,23 @@ func (v *Shape) UnmarshalJSON(data []byte) error {
 			value = vv
 		}
 	case "group":
+		var vv *Group
 		if currTypeName == "group" {
-			vv := v.IsShape.(*Group)
-			if err := json.Unmarshal(data, &vv); err != nil {
-				return fmt.Errorf("unmarshaling Shape as Group: %v", err)
-			}
-			value = vv
-		} else {
-			var vv *Group
-			if err := json.Unmarshal(data, &vv); err != nil {
-				return fmt.Errorf("unmarshaling Shape as Group: %v", err)
-			}
-			value = vv
+			vv = v.IsShape.(*Group)
 		}
+		if err := json.Unmarshal(data, &vv); err != nil {
+			return fmt.Errorf("unmarshaling Shape as Group: %v", err)
+		}
+		value = vv
 	case "polygon":
+		var vv *Polygon
 		if currTypeName == "polygon" {
-			vv := v.IsShape.(*Polygon)
-			if err := json.Unmarshal(data, &vv); err != nil {
-				return fmt.Errorf("unmarshaling Shape as Polygon: %v", err)
-			}
-			value = vv
-		} else {
-			var vv *Polygon
-			if err := json.Unmarshal(data, &vv); err != nil {
-				return fmt.Errorf("unmarshaling Shape as Polygon: %v", err)
-			}
-			value = vv
+			vv = v.IsShape.(*Polygon)
 		}
+		if err := json.Unmarshal(data, &vv); err != nil {
+			return fmt.Errorf("unmarshaling Shape as Polygon: %v", err)
+		}
+		value = vv
 	case "rectangle":
 		if currTypeName == "rectangle" {
 			if currTypeAsPointer {

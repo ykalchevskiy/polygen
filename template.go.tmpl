@@ -96,20 +96,24 @@ func (v *{{.Type}}) UnmarshalJSON(data []byte) error {
 	{{- range .Types}}
 	case "{{.TypeName}}":
 		{{- if $.Strict}}
-			if currTypeName == "{{.TypeName}}" {
-				{{- if .IsPointer}}
-					vv := struct {
-						*{{.SubType}}
-						Type string `json:"{{$.Descriptor}}"`
-					}{}
+			{{- if .IsPointer}}
+				vv := struct {
+					*{{.SubType}}
+					Type string `json:"{{$.Descriptor}}"`
+				}{}
+				if currTypeName == "{{.TypeName}}" {
 					vv.{{.SubType}} = v.{{$.Interface}}.(*{{.SubType}})
-					decoder := json.NewDecoder(bytes.NewReader(data))
-					decoder.DisallowUnknownFields()
-					if err := decoder.Decode(&vv); err != nil {
-						return fmt.Errorf("unmarshaling {{$.Type}} as {{.SubType}}: %v", err)
-					}
-					value = vv.{{.SubType}}
-				{{- else}}
+				} else {
+					vv.{{.SubType}} = new({{.SubType}})
+				}
+				decoder := json.NewDecoder(bytes.NewReader(data))
+				decoder.DisallowUnknownFields()
+				if err := decoder.Decode(&vv); err != nil {
+					return fmt.Errorf("unmarshaling {{$.Type}} as {{.SubType}}: %v", err)
+				}
+				value = vv.{{.SubType}}
+			{{- else}}
+				if currTypeName == "{{.TypeName}}" {
 					if currTypeAsPointer {
 						vv := struct {
 							*{{.SubType}}
@@ -135,21 +139,7 @@ func (v *{{.Type}}) UnmarshalJSON(data []byte) error {
 						}
 						value = vv.{{.SubType}}
 					}
-				{{- end}}
-			} else {
-				{{- if .IsPointer}}
-					vv := struct {
-						*{{.SubType}}
-						Type string `json:"{{$.Descriptor}}"`
-					}{}
-					vv.{{.SubType}} = new({{.SubType}})
-					decoder := json.NewDecoder(bytes.NewReader(data))
-					decoder.DisallowUnknownFields()
-					if err := decoder.Decode(&vv); err != nil {
-						return fmt.Errorf("unmarshaling {{$.Type}} as {{.SubType}}: %v", err)
-					}
-					value = vv.{{.SubType}}
-				{{- else}}
+				} else {
 					vv := struct {
 						{{.SubType}}
 						Type string `json:"{{$.Descriptor}}"`
@@ -160,38 +150,41 @@ func (v *{{.Type}}) UnmarshalJSON(data []byte) error {
 						return fmt.Errorf("unmarshaling {{$.Type}} as {{.SubType}}: %v", err)
 					}
 					value = vv.{{.SubType}}
-				{{- end}}
-			}
+				}	
+			{{- end}}
 		{{- else}}
-			if currTypeName == "{{.TypeName}}" {
-				{{- if .IsPointer}}
-				vv := v.{{$.Interface}}.(*{{.SubType}})
+			{{- if .IsPointer}}
+				var vv *{{.SubType}}
+				if currTypeName == "{{.TypeName}}" {
+					vv = v.{{$.Interface}}.(*{{.SubType}})
+				}
 				if err := json.Unmarshal(data, &vv); err != nil {
 					return fmt.Errorf("unmarshaling {{$.Type}} as {{.SubType}}: %v", err)
 				}
 				value = vv
-				{{- else}}
-				if currTypeAsPointer {
-					vv := v.{{$.Interface}}.(*{{.SubType}})
-					if err := json.Unmarshal(data, &vv); err != nil {
-						return fmt.Errorf("unmarshaling {{$.Type}} as {{.SubType}}: %v", err)
+			{{- else}}
+				if currTypeName == "{{.TypeName}}" {
+					if currTypeAsPointer {
+						vv := v.{{$.Interface}}.(*{{.SubType}})
+						if err := json.Unmarshal(data, &vv); err != nil {
+							return fmt.Errorf("unmarshaling {{$.Type}} as {{.SubType}}: %v", err)
+						}
+						value = vv
+					} else {
+						vv := v.{{$.Interface}}.({{.SubType}})
+						if err := json.Unmarshal(data, &vv); err != nil {
+							return fmt.Errorf("unmarshaling {{$.Type}} as {{.SubType}}: %v", err)
+						}
+						value = vv
 					}
-					value = vv
 				} else {
-					vv := v.{{$.Interface}}.({{.SubType}})
+					var vv {{.SubType}}
 					if err := json.Unmarshal(data, &vv); err != nil {
 						return fmt.Errorf("unmarshaling {{$.Type}} as {{.SubType}}: %v", err)
 					}
 					value = vv
 				}
-				{{- end}}
-			} else {
-				var vv {{if .IsPointer}}*{{- end}}{{.SubType}}
-				if err := json.Unmarshal(data, &vv); err != nil {
-					return fmt.Errorf("unmarshaling {{$.Type}} as {{.SubType}}: %v", err)
-				}
-				value = vv
-			}
+			{{- end}}
 		{{- end}}
 	{{- end}}
 	default:

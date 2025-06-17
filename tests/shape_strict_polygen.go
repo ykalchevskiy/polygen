@@ -172,57 +172,37 @@ func (v *ShapeStrict) UnmarshalJSON(data []byte) error {
 			value = vv.Empty
 		}
 	case "group":
+		vv := struct {
+			*Group
+			Type string `json:"type"`
+		}{}
 		if currTypeName == "group" {
-			vv := struct {
-				*Group
-				Type string `json:"type"`
-			}{}
 			vv.Group = v.IsShape.(*Group)
-			decoder := json.NewDecoder(bytes.NewReader(data))
-			decoder.DisallowUnknownFields()
-			if err := decoder.Decode(&vv); err != nil {
-				return fmt.Errorf("unmarshaling ShapeStrict as Group: %v", err)
-			}
-			value = vv.Group
 		} else {
-			vv := struct {
-				*Group
-				Type string `json:"type"`
-			}{}
 			vv.Group = new(Group)
-			decoder := json.NewDecoder(bytes.NewReader(data))
-			decoder.DisallowUnknownFields()
-			if err := decoder.Decode(&vv); err != nil {
-				return fmt.Errorf("unmarshaling ShapeStrict as Group: %v", err)
-			}
-			value = vv.Group
 		}
+		decoder := json.NewDecoder(bytes.NewReader(data))
+		decoder.DisallowUnknownFields()
+		if err := decoder.Decode(&vv); err != nil {
+			return fmt.Errorf("unmarshaling ShapeStrict as Group: %v", err)
+		}
+		value = vv.Group
 	case "polygon":
+		vv := struct {
+			*Polygon
+			Type string `json:"type"`
+		}{}
 		if currTypeName == "polygon" {
-			vv := struct {
-				*Polygon
-				Type string `json:"type"`
-			}{}
 			vv.Polygon = v.IsShape.(*Polygon)
-			decoder := json.NewDecoder(bytes.NewReader(data))
-			decoder.DisallowUnknownFields()
-			if err := decoder.Decode(&vv); err != nil {
-				return fmt.Errorf("unmarshaling ShapeStrict as Polygon: %v", err)
-			}
-			value = vv.Polygon
 		} else {
-			vv := struct {
-				*Polygon
-				Type string `json:"type"`
-			}{}
 			vv.Polygon = new(Polygon)
-			decoder := json.NewDecoder(bytes.NewReader(data))
-			decoder.DisallowUnknownFields()
-			if err := decoder.Decode(&vv); err != nil {
-				return fmt.Errorf("unmarshaling ShapeStrict as Polygon: %v", err)
-			}
-			value = vv.Polygon
 		}
+		decoder := json.NewDecoder(bytes.NewReader(data))
+		decoder.DisallowUnknownFields()
+		if err := decoder.Decode(&vv); err != nil {
+			return fmt.Errorf("unmarshaling ShapeStrict as Polygon: %v", err)
+		}
+		value = vv.Polygon
 	case "rectangle":
 		if currTypeName == "rectangle" {
 			if currTypeAsPointer {
