@@ -25,14 +25,14 @@ jobs:
 
     - name: Run tests
       run: |
-        // generate code
+        # generate code
         go generate ./...
 
-        // fail if there are any changes in the generated files
+        # fail if there are any changes in the generated files
         if ! git diff --exit-code; then
           echo "Generated files have changed. Please run 'go generate ./...' and commit the changes."
           exit 1
         fi
 
-        // run tests
+        # run tests
         go test -v ./...
