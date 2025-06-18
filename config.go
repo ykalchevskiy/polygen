@@ -150,15 +150,15 @@ func toCase(s, sep string) string {
 	rs := []rune(s)
 
 	for i := 0; i < len(rs); i++ {
-		if i > 0 && unicode.IsUpper(rs[i]) {
-			words = append(words, strings.ToLower(s[lastPos:i]))
+		if i > 0 && !unicode.IsLower(rs[i]) {
+			words = append(words, strings.ToLower(string(rs[lastPos:i])))
 			lastPos = i
 		}
 	}
 
 	// append the last word
-	if lastPos < len(s) {
-		words = append(words, strings.ToLower(s[lastPos:]))
+	if lastPos < len(rs) {
+		words = append(words, strings.ToLower(string(rs[lastPos:])))
 	}
 
 	result = strings.Join(words, sep)
