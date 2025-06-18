@@ -11,22 +11,21 @@ import (
 //go:embed template.go.tmpl
 var codeTemplate string
 
-func generate(cfg *Config) (string, error) {
+func generate(cfg *Config) ([]byte, error) {
 	tmpl, err := template.New("code").Parse(codeTemplate)
 	if err != nil {
-		return "", fmt.Errorf("parsing template: %v", err)
+		return nil, fmt.Errorf("parsing template: %v", err)
 	}
 
 	var buf bytes.Buffer
 	if err := tmpl.Execute(&buf, cfg); err != nil {
-		return "", fmt.Errorf("failed to execute template: %v", err)
+		return nil, fmt.Errorf("executing template: %v", err)
 	}
 
-	// Format the generated code
 	formatted, err := format.Source(buf.Bytes())
 	if err != nil {
-		return "", fmt.Errorf("failed to format code: %v", err)
+		return nil, fmt.Errorf("formatting code: %v", err)
 	}
 
-	return string(formatted), nil
+	return formatted, nil
 }

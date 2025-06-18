@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"io"
 	"os"
 	"os/exec"
@@ -242,45 +243,22 @@ func TestConfig(t *testing.T) {
 	t.Run("default values", func(t *testing.T) {
 		isPointerTrue := true
 		config := FileConfig{
-			Types: []TypeConfig{
+			Types: []FileTypeConfig{
 				{
 					Type:      "TestType",
 					Interface: "TestInterface",
 					Package:   "test",
-					Subtypes: map[string]SubtypeConfig{
+					Subtypes: map[string]FileSubtypeConfig{
 						"SubType1": {},
-						"SubType2": {Pointer: &isPointerTrue},
+						"SubType2": {
+							Pointer: &isPointerTrue,
+						},
 					},
 				},
 			},
 		}
 
-		// Convert first type config to internal format
-		cfg := &Config{
-			Type:       config.Types[0].Type,
-			Interface:  config.Types[0].Interface,
-			Package:    config.Types[0].Package,
-			Descriptor: "type", // Default descriptor
-		}
-
-		// Process subtypes
-		for subType, subConfig := range config.Types[0].Subtypes {
-			var typeName string
-			if subConfig.Name != nil {
-				typeName = *subConfig.Name
-			} else {
-				typeName = toKebabCase(subType)
-			}
-			isPointer := config.PointerByDefault
-			if subConfig.Pointer != nil {
-				isPointer = *subConfig.Pointer
-			}
-			cfg.Types = append(cfg.Types, TypeMapping{
-				SubType:   subType,
-				TypeName:  typeName,
-				IsPointer: isPointer,
-			})
-		}
+		cfg := convertFileConfigToConfig(&config.Types[0], &config)
 
 		// Generate code
 		code, err := generate(cfg)
@@ -288,7 +266,7 @@ func TestConfig(t *testing.T) {
 			t.Fatalf("generate failed: %v", err)
 		}
 
-		if code == "" {
+		if code == nil {
 			t.Error("generated code is empty")
 		}
 
@@ -307,9 +285,9 @@ func TestConfig(t *testing.T) {
 		}
 
 		for _, r := range required {
-			if !strings.Contains(code, r) {
+			if !bytes.Contains(code, []byte(r)) {
 				t.Errorf("generated code missing required part: %q", r)
-				t.Logf("Generated code:\n%s", code)
+				t.Logf("Generated code:\n%s", string(code))
 			}
 		}
 	})
@@ -320,13 +298,13 @@ func TestConfig(t *testing.T) {
 			DefaultDescriptor: "kind",
 			StrictByDefault:   true,
 			PointerByDefault:  true,
-			Types: []TypeConfig{
+			Types: []FileTypeConfig{
 				{
 					Type:      "TestType",
 					Interface: "TestInterface",
 					Package:   "test",
 					Directory: "pkg",
-					Subtypes: map[string]SubtypeConfig{
+					Subtypes: map[string]FileSubtypeConfig{
 						"SubType1": {
 							Name: &subType1Name,
 						},
@@ -336,33 +314,7 @@ func TestConfig(t *testing.T) {
 			},
 		}
 
-		// Convert first type config to internal format
-		cfg := &Config{
-			Type:       config.Types[0].Type,
-			Interface:  config.Types[0].Interface,
-			Package:    config.Types[0].Package,
-			Descriptor: config.DefaultDescriptor,
-			Strict:     config.StrictByDefault,
-		}
-
-		// Process subtypes
-		for subType, subConfig := range config.Types[0].Subtypes {
-			typeName := subType
-			if subConfig.Name != nil {
-				typeName = *subConfig.Name
-			} else {
-				typeName = toKebabCase(subType)
-			}
-			isPointer := config.PointerByDefault
-			if subConfig.Pointer != nil {
-				isPointer = *subConfig.Pointer
-			}
-			cfg.Types = append(cfg.Types, TypeMapping{
-				SubType:   subType,
-				TypeName:  typeName,
-				IsPointer: isPointer,
-			})
-		}
+		cfg := convertFileConfigToConfig(&config.Types[0], &config)
 
 		// Generate code
 		code, err := generate(cfg)
@@ -370,7 +322,7 @@ func TestConfig(t *testing.T) {
 			t.Fatalf("generate failed: %v", err)
 		}
 
-		if code == "" {
+		if code == nil {
 			t.Error("generated code is empty")
 		}
 
@@ -390,9 +342,9 @@ func TestConfig(t *testing.T) {
 		}
 
 		for _, r := range required {
-			if !strings.Contains(code, r) {
+			if !bytes.Contains(code, []byte(r)) {
 				t.Errorf("generated code missing required part: %q", r)
-				t.Logf("Generated code:\n%s", code)
+				t.Logf("Generated code:\n%s", string(code))
 			}
 		}
 	})
