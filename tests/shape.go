@@ -1,5 +1,7 @@
 package tests
 
+//go:generate go run ..
+
 // Common interface for testing value and pointer types
 type IsShape interface {
 	isShape()

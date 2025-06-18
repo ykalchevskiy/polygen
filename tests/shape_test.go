@@ -8,8 +8,6 @@ import (
 	"testing"
 )
 
-//go:generate go run ..
-
 var marshalTests = []struct {
 	name    string
 	shape   Shape
