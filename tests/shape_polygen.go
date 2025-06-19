@@ -37,7 +37,7 @@ func (v Shape) MarshalJSON() ([]byte, error) {
 	// Marshal the implementation first to get its fields
 	implData, err := json.Marshal(v.IsShape)
 	if err != nil {
-		return nil, fmt.Errorf("marshaling IsShape implementation: %v", err)
+		return nil, fmt.Errorf("polygen: cannot marshal IsShape for Shape: %v", err)
 	}
 
 	if bytes.Equal(implData, []byte("null")) {
@@ -46,7 +46,7 @@ func (v Shape) MarshalJSON() ([]byte, error) {
 
 	typeName, _, err := _ShapeGetType(v.IsShape)
 	if err != nil {
-		return nil, fmt.Errorf("getting type for Shape: %v", err)
+		return nil, fmt.Errorf("polygen: cannot get subtype to marshal for Shape: %v", err)
 	}
 
 	// If it's an empty object, just return descriptor
@@ -74,7 +74,7 @@ func (v *Shape) UnmarshalJSON(data []byte) error {
 		var err error
 		currTypeName, currTypeAsPointer, err = _ShapeGetType(v.IsShape)
 		if err != nil {
-			return fmt.Errorf("getting type for existing Shape: %v", err)
+			return fmt.Errorf("polygen: cannot get subtype to unmarshal for Shape: %v", err)
 		}
 	}
 	_ = currTypeAsPointer // In case of all subtypes being pointers, we must just ignore this
@@ -86,11 +86,11 @@ func (v *Shape) UnmarshalJSON(data []byte) error {
 		Type: currTypeName,
 	}
 	if err := json.Unmarshal(data, &typeData); err != nil {
-		return fmt.Errorf("unmarshaling Shape type field: %v", err)
+		return fmt.Errorf("polygen: cannot unmarshal descriptor field type for Shape: %v", err)
 	}
 
 	if typeData.Type == "" {
-		return fmt.Errorf("missing type field in JSON for Shape")
+		return fmt.Errorf("polygen: missing descriptor field type for Shape")
 	}
 
 	typeName := typeData.Type
@@ -102,20 +102,20 @@ func (v *Shape) UnmarshalJSON(data []byte) error {
 			if currTypeAsPointer {
 				vv := v.IsShape.(*Circle)
 				if err := json.Unmarshal(data, &vv); err != nil {
-					return fmt.Errorf("unmarshaling Shape as Circle: %v", err)
+					return fmt.Errorf("polygen: cannot unmarshal Circle for Shape: %v", err)
 				}
 				value = vv
 			} else {
 				vv := v.IsShape.(Circle)
 				if err := json.Unmarshal(data, &vv); err != nil {
-					return fmt.Errorf("unmarshaling Shape as Circle: %v", err)
+					return fmt.Errorf("polygen: cannot unmarshal Circle for Shape: %v", err)
 				}
 				value = vv
 			}
 		} else {
 			var vv Circle
 			if err := json.Unmarshal(data, &vv); err != nil {
-				return fmt.Errorf("unmarshaling Shape as Circle: %v", err)
+				return fmt.Errorf("polygen: cannot unmarshal Circle for Shape: %v", err)
 			}
 			value = vv
 		}
@@ -124,20 +124,20 @@ func (v *Shape) UnmarshalJSON(data []byte) error {
 			if currTypeAsPointer {
 				vv := v.IsShape.(*Empty)
 				if err := json.Unmarshal(data, &vv); err != nil {
-					return fmt.Errorf("unmarshaling Shape as Empty: %v", err)
+					return fmt.Errorf("polygen: cannot unmarshal Empty for Shape: %v", err)
 				}
 				value = vv
 			} else {
 				vv := v.IsShape.(Empty)
 				if err := json.Unmarshal(data, &vv); err != nil {
-					return fmt.Errorf("unmarshaling Shape as Empty: %v", err)
+					return fmt.Errorf("polygen: cannot unmarshal Empty for Shape: %v", err)
 				}
 				value = vv
 			}
 		} else {
 			var vv Empty
 			if err := json.Unmarshal(data, &vv); err != nil {
-				return fmt.Errorf("unmarshaling Shape as Empty: %v", err)
+				return fmt.Errorf("polygen: cannot unmarshal Empty for Shape: %v", err)
 			}
 			value = vv
 		}
@@ -147,7 +147,7 @@ func (v *Shape) UnmarshalJSON(data []byte) error {
 			vv = v.IsShape.(*Group)
 		}
 		if err := json.Unmarshal(data, &vv); err != nil {
-			return fmt.Errorf("unmarshaling Shape as Group: %v", err)
+			return fmt.Errorf("polygen: cannot unmarshal Group for Shape: %v", err)
 		}
 		value = vv
 	case "polygon":
@@ -156,7 +156,7 @@ func (v *Shape) UnmarshalJSON(data []byte) error {
 			vv = v.IsShape.(*Polygon)
 		}
 		if err := json.Unmarshal(data, &vv); err != nil {
-			return fmt.Errorf("unmarshaling Shape as Polygon: %v", err)
+			return fmt.Errorf("polygen: cannot unmarshal Polygon for Shape: %v", err)
 		}
 		value = vv
 	case "rectangle":
@@ -164,25 +164,25 @@ func (v *Shape) UnmarshalJSON(data []byte) error {
 			if currTypeAsPointer {
 				vv := v.IsShape.(*Rectangle)
 				if err := json.Unmarshal(data, &vv); err != nil {
-					return fmt.Errorf("unmarshaling Shape as Rectangle: %v", err)
+					return fmt.Errorf("polygen: cannot unmarshal Rectangle for Shape: %v", err)
 				}
 				value = vv
 			} else {
 				vv := v.IsShape.(Rectangle)
 				if err := json.Unmarshal(data, &vv); err != nil {
-					return fmt.Errorf("unmarshaling Shape as Rectangle: %v", err)
+					return fmt.Errorf("polygen: cannot unmarshal Rectangle for Shape: %v", err)
 				}
 				value = vv
 			}
 		} else {
 			var vv Rectangle
 			if err := json.Unmarshal(data, &vv); err != nil {
-				return fmt.Errorf("unmarshaling Shape as Rectangle: %v", err)
+				return fmt.Errorf("polygen: cannot unmarshal Rectangle for Shape: %v", err)
 			}
 			value = vv
 		}
 	default:
-		return fmt.Errorf("unknown Shape type: %s", typeName)
+		return fmt.Errorf("polygen: unknown subtype for Shape: %s", typeName)
 	}
 
 	*v = Shape{
@@ -204,5 +204,5 @@ func _ShapeGetType(v IsShape) (name string, asPointer bool, _ error) {
 			return typeName, true, nil
 		}
 	}
-	return "", false, fmt.Errorf("unknown subtype for Shape: %v", t)
+	return "", false, fmt.Errorf("unknown subtype: %v", t)
 }

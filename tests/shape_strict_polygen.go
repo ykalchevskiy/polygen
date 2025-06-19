@@ -37,7 +37,7 @@ func (v ShapeStrict) MarshalJSON() ([]byte, error) {
 	// Marshal the implementation first to get its fields
 	implData, err := json.Marshal(v.IsShape)
 	if err != nil {
-		return nil, fmt.Errorf("marshaling IsShape implementation: %v", err)
+		return nil, fmt.Errorf("polygen: cannot marshal IsShape for ShapeStrict: %v", err)
 	}
 
 	if bytes.Equal(implData, []byte("null")) {
@@ -46,7 +46,7 @@ func (v ShapeStrict) MarshalJSON() ([]byte, error) {
 
 	typeName, _, err := _ShapeStrictGetType(v.IsShape)
 	if err != nil {
-		return nil, fmt.Errorf("getting type for ShapeStrict: %v", err)
+		return nil, fmt.Errorf("polygen: cannot get subtype to marshal for ShapeStrict: %v", err)
 	}
 
 	// If it's an empty object, just return descriptor
@@ -74,7 +74,7 @@ func (v *ShapeStrict) UnmarshalJSON(data []byte) error {
 		var err error
 		currTypeName, currTypeAsPointer, err = _ShapeStrictGetType(v.IsShape)
 		if err != nil {
-			return fmt.Errorf("getting type for existing ShapeStrict: %v", err)
+			return fmt.Errorf("polygen: cannot get subtype to unmarshal for ShapeStrict: %v", err)
 		}
 	}
 	_ = currTypeAsPointer // In case of all subtypes being pointers, we must just ignore this
@@ -86,11 +86,11 @@ func (v *ShapeStrict) UnmarshalJSON(data []byte) error {
 		Type: currTypeName,
 	}
 	if err := json.Unmarshal(data, &typeData); err != nil {
-		return fmt.Errorf("unmarshaling ShapeStrict type field: %v", err)
+		return fmt.Errorf("polygen: cannot unmarshal descriptor field type for ShapeStrict: %v", err)
 	}
 
 	if typeData.Type == "" {
-		return fmt.Errorf("missing type field in JSON for ShapeStrict")
+		return fmt.Errorf("polygen: missing descriptor field type for ShapeStrict")
 	}
 
 	typeName := typeData.Type
@@ -108,7 +108,7 @@ func (v *ShapeStrict) UnmarshalJSON(data []byte) error {
 				decoder := json.NewDecoder(bytes.NewReader(data))
 				decoder.DisallowUnknownFields()
 				if err := decoder.Decode(&vv); err != nil {
-					return fmt.Errorf("unmarshaling ShapeStrict as Circle: %v", err)
+					return fmt.Errorf("polygen: cannot unmarshal Circle for ShapeStrict: %v", err)
 				}
 				value = vv.Circle
 			} else {
@@ -120,7 +120,7 @@ func (v *ShapeStrict) UnmarshalJSON(data []byte) error {
 				decoder := json.NewDecoder(bytes.NewReader(data))
 				decoder.DisallowUnknownFields()
 				if err := decoder.Decode(&vv); err != nil {
-					return fmt.Errorf("unmarshaling ShapeStrict as Circle: %v", err)
+					return fmt.Errorf("polygen: cannot unmarshal Circle for ShapeStrict: %v", err)
 				}
 				value = vv.Circle
 			}
@@ -132,7 +132,7 @@ func (v *ShapeStrict) UnmarshalJSON(data []byte) error {
 			decoder := json.NewDecoder(bytes.NewReader(data))
 			decoder.DisallowUnknownFields()
 			if err := decoder.Decode(&vv); err != nil {
-				return fmt.Errorf("unmarshaling ShapeStrict as Circle: %v", err)
+				return fmt.Errorf("polygen: cannot unmarshal Circle for ShapeStrict: %v", err)
 			}
 			value = vv.Circle
 		}
@@ -147,7 +147,7 @@ func (v *ShapeStrict) UnmarshalJSON(data []byte) error {
 				decoder := json.NewDecoder(bytes.NewReader(data))
 				decoder.DisallowUnknownFields()
 				if err := decoder.Decode(&vv); err != nil {
-					return fmt.Errorf("unmarshaling ShapeStrict as Empty: %v", err)
+					return fmt.Errorf("polygen: cannot unmarshal Empty for ShapeStrict: %v", err)
 				}
 				value = vv.Empty
 			} else {
@@ -159,7 +159,7 @@ func (v *ShapeStrict) UnmarshalJSON(data []byte) error {
 				decoder := json.NewDecoder(bytes.NewReader(data))
 				decoder.DisallowUnknownFields()
 				if err := decoder.Decode(&vv); err != nil {
-					return fmt.Errorf("unmarshaling ShapeStrict as Empty: %v", err)
+					return fmt.Errorf("polygen: cannot unmarshal Empty for ShapeStrict: %v", err)
 				}
 				value = vv.Empty
 			}
@@ -171,7 +171,7 @@ func (v *ShapeStrict) UnmarshalJSON(data []byte) error {
 			decoder := json.NewDecoder(bytes.NewReader(data))
 			decoder.DisallowUnknownFields()
 			if err := decoder.Decode(&vv); err != nil {
-				return fmt.Errorf("unmarshaling ShapeStrict as Empty: %v", err)
+				return fmt.Errorf("polygen: cannot unmarshal Empty for ShapeStrict: %v", err)
 			}
 			value = vv.Empty
 		}
@@ -188,7 +188,7 @@ func (v *ShapeStrict) UnmarshalJSON(data []byte) error {
 		decoder := json.NewDecoder(bytes.NewReader(data))
 		decoder.DisallowUnknownFields()
 		if err := decoder.Decode(&vv); err != nil {
-			return fmt.Errorf("unmarshaling ShapeStrict as Group: %v", err)
+			return fmt.Errorf("polygen: cannot unmarshal Group for ShapeStrict: %v", err)
 		}
 		value = vv.Group
 	case "polygon":
@@ -204,7 +204,7 @@ func (v *ShapeStrict) UnmarshalJSON(data []byte) error {
 		decoder := json.NewDecoder(bytes.NewReader(data))
 		decoder.DisallowUnknownFields()
 		if err := decoder.Decode(&vv); err != nil {
-			return fmt.Errorf("unmarshaling ShapeStrict as Polygon: %v", err)
+			return fmt.Errorf("polygen: cannot unmarshal Polygon for ShapeStrict: %v", err)
 		}
 		value = vv.Polygon
 	case "rectangle":
@@ -218,7 +218,7 @@ func (v *ShapeStrict) UnmarshalJSON(data []byte) error {
 				decoder := json.NewDecoder(bytes.NewReader(data))
 				decoder.DisallowUnknownFields()
 				if err := decoder.Decode(&vv); err != nil {
-					return fmt.Errorf("unmarshaling ShapeStrict as Rectangle: %v", err)
+					return fmt.Errorf("polygen: cannot unmarshal Rectangle for ShapeStrict: %v", err)
 				}
 				value = vv.Rectangle
 			} else {
@@ -230,7 +230,7 @@ func (v *ShapeStrict) UnmarshalJSON(data []byte) error {
 				decoder := json.NewDecoder(bytes.NewReader(data))
 				decoder.DisallowUnknownFields()
 				if err := decoder.Decode(&vv); err != nil {
-					return fmt.Errorf("unmarshaling ShapeStrict as Rectangle: %v", err)
+					return fmt.Errorf("polygen: cannot unmarshal Rectangle for ShapeStrict: %v", err)
 				}
 				value = vv.Rectangle
 			}
@@ -242,12 +242,12 @@ func (v *ShapeStrict) UnmarshalJSON(data []byte) error {
 			decoder := json.NewDecoder(bytes.NewReader(data))
 			decoder.DisallowUnknownFields()
 			if err := decoder.Decode(&vv); err != nil {
-				return fmt.Errorf("unmarshaling ShapeStrict as Rectangle: %v", err)
+				return fmt.Errorf("polygen: cannot unmarshal Rectangle for ShapeStrict: %v", err)
 			}
 			value = vv.Rectangle
 		}
 	default:
-		return fmt.Errorf("unknown ShapeStrict type: %s", typeName)
+		return fmt.Errorf("polygen: unknown subtype for ShapeStrict: %s", typeName)
 	}
 
 	*v = ShapeStrict{
@@ -269,5 +269,5 @@ func _ShapeStrictGetType(v IsShape) (name string, asPointer bool, _ error) {
 			return typeName, true, nil
 		}
 	}
-	return "", false, fmt.Errorf("unknown subtype for ShapeStrict: %v", t)
+	return "", false, fmt.Errorf("unknown subtype: %v", t)
 }

@@ -31,7 +31,7 @@ func (v Item) MarshalJSON() ([]byte, error) {
 	// Marshal the implementation first to get its fields
 	implData, err := json.Marshal(v.IsItem)
 	if err != nil {
-		return nil, fmt.Errorf("marshaling IsItem implementation: %v", err)
+		return nil, fmt.Errorf("polygen: cannot marshal IsItem for Item: %v", err)
 	}
 
 	if bytes.Equal(implData, []byte("null")) {
@@ -40,7 +40,7 @@ func (v Item) MarshalJSON() ([]byte, error) {
 
 	typeName, _, err := _ItemGetType(v.IsItem)
 	if err != nil {
-		return nil, fmt.Errorf("getting type for Item: %v", err)
+		return nil, fmt.Errorf("polygen: cannot get subtype to marshal for Item: %v", err)
 	}
 
 	// If it's an empty object, just return descriptor
@@ -68,7 +68,7 @@ func (v *Item) UnmarshalJSON(data []byte) error {
 		var err error
 		currTypeName, currTypeAsPointer, err = _ItemGetType(v.IsItem)
 		if err != nil {
-			return fmt.Errorf("getting type for existing Item: %v", err)
+			return fmt.Errorf("polygen: cannot get subtype to unmarshal for Item: %v", err)
 		}
 	}
 	_ = currTypeAsPointer // In case of all subtypes being pointers, we must just ignore this
@@ -80,11 +80,11 @@ func (v *Item) UnmarshalJSON(data []byte) error {
 		Type: currTypeName,
 	}
 	if err := json.Unmarshal(data, &typeData); err != nil {
-		return fmt.Errorf("unmarshaling Item type field: %v", err)
+		return fmt.Errorf("polygen: cannot unmarshal descriptor field kind for Item: %v", err)
 	}
 
 	if typeData.Type == "" {
-		return fmt.Errorf("missing kind field in JSON for Item")
+		return fmt.Errorf("polygen: missing descriptor field kind for Item")
 	}
 
 	typeName := typeData.Type
@@ -104,7 +104,7 @@ func (v *Item) UnmarshalJSON(data []byte) error {
 		decoder := json.NewDecoder(bytes.NewReader(data))
 		decoder.DisallowUnknownFields()
 		if err := decoder.Decode(&vv); err != nil {
-			return fmt.Errorf("unmarshaling Item as ImageItem: %v", err)
+			return fmt.Errorf("polygen: cannot unmarshal ImageItem for Item: %v", err)
 		}
 		value = vv.ImageItem
 	case "text":
@@ -118,7 +118,7 @@ func (v *Item) UnmarshalJSON(data []byte) error {
 				decoder := json.NewDecoder(bytes.NewReader(data))
 				decoder.DisallowUnknownFields()
 				if err := decoder.Decode(&vv); err != nil {
-					return fmt.Errorf("unmarshaling Item as TextItem: %v", err)
+					return fmt.Errorf("polygen: cannot unmarshal TextItem for Item: %v", err)
 				}
 				value = vv.TextItem
 			} else {
@@ -130,7 +130,7 @@ func (v *Item) UnmarshalJSON(data []byte) error {
 				decoder := json.NewDecoder(bytes.NewReader(data))
 				decoder.DisallowUnknownFields()
 				if err := decoder.Decode(&vv); err != nil {
-					return fmt.Errorf("unmarshaling Item as TextItem: %v", err)
+					return fmt.Errorf("polygen: cannot unmarshal TextItem for Item: %v", err)
 				}
 				value = vv.TextItem
 			}
@@ -142,12 +142,12 @@ func (v *Item) UnmarshalJSON(data []byte) error {
 			decoder := json.NewDecoder(bytes.NewReader(data))
 			decoder.DisallowUnknownFields()
 			if err := decoder.Decode(&vv); err != nil {
-				return fmt.Errorf("unmarshaling Item as TextItem: %v", err)
+				return fmt.Errorf("polygen: cannot unmarshal TextItem for Item: %v", err)
 			}
 			value = vv.TextItem
 		}
 	default:
-		return fmt.Errorf("unknown Item type: %s", typeName)
+		return fmt.Errorf("polygen: unknown subtype for Item: %s", typeName)
 	}
 
 	*v = Item{
@@ -169,5 +169,5 @@ func _ItemGetType(v IsItem) (name string, asPointer bool, _ error) {
 			return typeName, true, nil
 		}
 	}
-	return "", false, fmt.Errorf("unknown subtype for Item: %v", t)
+	return "", false, fmt.Errorf("unknown subtype: %v", t)
 }
