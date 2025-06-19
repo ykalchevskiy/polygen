@@ -135,32 +135,47 @@ func getOutputPath(typeConfig *FileTypeConfig, configDir string) string {
 
 // toKebabCase converts a string from PascalCase to kebab-case
 func toKebabCase(s string) string {
-	return toCase(s, "-")
+	return toCase(s, rune('-'))
 }
 
 // toSnakeCase converts a string from PascalCase to snake_case
 func toSnakeCase(s string) string {
-	return toCase(s, "_")
+	return toCase(s, rune('_'))
 }
 
-func toCase(s, sep string) string {
-	var result string
-	var words []string
-	var lastPos int
-	rs := []rune(s)
+func toCase(s string, sep rune) string {
+	var result strings.Builder
 
-	for i := 0; i < len(rs); i++ {
-		if i > 0 && !unicode.IsLower(rs[i]) {
-			words = append(words, strings.ToLower(string(rs[lastPos:i])))
-			lastPos = i
+	runes := []rune(s)
+	length := len(runes)
+
+	for i := 0; i < length; i++ {
+		current := runes[i]
+
+		if i > 0 {
+			prev := runes[i-1]
+			next := rune(0)
+			if i+1 < length {
+				next = runes[i+1]
+			}
+
+			// lower -> Upper (e.g., myTest -> my_test)
+			if unicode.IsLower(prev) && unicode.IsUpper(current) {
+				result.WriteRune(sep)
+			} else
+			// (e.g., HTTPServer -> http_server)
+			if unicode.IsUpper(prev) && unicode.IsUpper(current) && next != 0 && unicode.IsLower(next) {
+				result.WriteRune(sep)
+			} else
+			// (e.g., test123 -> test_123)
+			if (unicode.IsLetter(prev) && unicode.IsDigit(current)) ||
+				(unicode.IsDigit(prev) && unicode.IsLetter(current)) {
+				result.WriteRune(sep)
+			}
 		}
+
+		result.WriteRune(unicode.ToLower(current))
 	}
 
-	// append the last word
-	if lastPos < len(rs) {
-		words = append(words, strings.ToLower(string(rs[lastPos:])))
-	}
-
-	result = strings.Join(words, sep)
-	return result
+	return result.String()
 }
