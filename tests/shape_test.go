@@ -103,24 +103,17 @@ func runMarshalTests(t *testing.T, tests []struct {
 				return
 			}
 			if err == nil {
-				if tt.want == "null" {
-					if string(got) != tt.want {
-						t.Errorf("%s.MarshalJSON() = %v, want %v", t.Name(), string(got), tt.want)
-					}
-				} else {
-					// Compare JSON objects to ignore field order differences
-					var gotObj, wantObj interface{}
-					if err := json.Unmarshal(got, &gotObj); err != nil {
-						t.Errorf("Failed to unmarshal result: %v", err)
-						return
-					}
-					if err := json.Unmarshal([]byte(tt.want), &wantObj); err != nil {
-						t.Errorf("Failed to unmarshal expected: %v", err)
-						return
-					}
-					if !reflect.DeepEqual(gotObj, wantObj) {
-						t.Errorf("%s.MarshalJSON() = %v, want %v", t.Name(), string(got), tt.want)
-					}
+				var gotObj, wantObj interface{}
+				if err := json.Unmarshal(got, &gotObj); err != nil {
+					t.Errorf("Failed to unmarshal result: %v", err)
+					return
+				}
+				if err := json.Unmarshal([]byte(tt.want), &wantObj); err != nil {
+					t.Errorf("Failed to unmarshal expected: %v", err)
+					return
+				}
+				if !reflect.DeepEqual(gotObj, wantObj) {
+					t.Errorf("%s.MarshalJSON() = %v, want %v", t.Name(), string(got), tt.want)
 				}
 			}
 		})
