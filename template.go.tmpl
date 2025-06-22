@@ -49,15 +49,15 @@ func (v {{.Type}}) MarshalJSON() ([]byte, error) {
 		return nil, fmt.Errorf("polygen: cannot get subtype to marshal for {{.Type}}: %v", err)
 	}
 
-	// If it's an empty object, just return descriptor
+	// If it's an empty object, just return discriminator
 	if bytes.Equal(implData, []byte("{}")) {
-		return []byte(fmt.Sprintf(`{"%s":"%s"}`, "{{.Descriptor}}", typeName)), nil
+		return []byte(fmt.Sprintf(`{"%s":"%s"}`, "{{.Discriminator}}", typeName)), nil
 	}
 
-	// Otherwise, combine descriptor with implementation fields
+	// Otherwise, combine discriminator with implementation fields
 	var buf bytes.Buffer
 
-	buf.WriteString(fmt.Sprintf(`{"%s":"%s",`, "{{.Descriptor}}", typeName))
+	buf.WriteString(fmt.Sprintf(`{"%s":"%s",`, "{{.Discriminator}}", typeName))
 	buf.Write(implData[1:])
 
 	return buf.Bytes(), nil
@@ -83,16 +83,16 @@ func (v *{{.Type}}) UnmarshalJSON(data []byte) error {
 
 	// First decode just the type field
 	typeData := struct {
-		Type string `json:"{{.Descriptor}}"`
+		Type string `json:"{{.Discriminator}}"`
 	}{
 		Type: currTypeName,
 	}
 	if err := json.Unmarshal(data, &typeData); err != nil {
-		return fmt.Errorf("polygen: cannot unmarshal descriptor field {{.Descriptor}} for {{.Type}}: %v", err)
+		return fmt.Errorf("polygen: cannot unmarshal discriminator {{.Discriminator}} for {{.Type}}: %v", err)
 	}
 
 	if typeData.Type == "" {
-		return fmt.Errorf("polygen: missing descriptor field {{.Descriptor}} for {{.Type}}")
+		return fmt.Errorf("polygen: missing discriminator {{.Discriminator}} for {{.Type}}")
 	}
 
  	typeName := typeData.Type
@@ -106,7 +106,7 @@ func (v *{{.Type}}) UnmarshalJSON(data []byte) error {
 			{{- if .IsPointer}}
 				vv := struct {
 					*{{.SubType}}
-					Type string `json:"{{$.Descriptor}}"`
+					Type string `json:"{{$.Discriminator}}"`
 				}{}
 				if currTypeName == "{{.TypeName}}" {
 					vv.{{.SubType}} = v.{{$.Interface}}.(*{{.SubType}})
@@ -124,7 +124,7 @@ func (v *{{.Type}}) UnmarshalJSON(data []byte) error {
 					if currTypeAsPointer {
 						vv := struct {
 							*{{.SubType}}
-							Type string `json:"{{$.Descriptor}}"`
+							Type string `json:"{{$.Discriminator}}"`
 						}{}
 						vv.{{.SubType}} = v.{{$.Interface}}.(*{{.SubType}})
 						decoder := json.NewDecoder(bytes.NewReader(data))
@@ -136,7 +136,7 @@ func (v *{{.Type}}) UnmarshalJSON(data []byte) error {
 					} else {
 						vv := struct {
 							{{.SubType}}
-							Type string `json:"{{$.Descriptor}}"`
+							Type string `json:"{{$.Discriminator}}"`
 						}{}
 						vv.{{.SubType}} = v.{{$.Interface}}.({{.SubType}})
 						decoder := json.NewDecoder(bytes.NewReader(data))
@@ -149,7 +149,7 @@ func (v *{{.Type}}) UnmarshalJSON(data []byte) error {
 				} else {
 					vv := struct {
 						{{.SubType}}
-						Type string `json:"{{$.Descriptor}}"`
+						Type string `json:"{{$.Discriminator}}"`
 					}{}
 					decoder := json.NewDecoder(bytes.NewReader(data))
 					decoder.DisallowUnknownFields()

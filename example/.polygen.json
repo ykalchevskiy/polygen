@@ -2,7 +2,7 @@
     "$schema": "https://raw.githubusercontent.com/ykalchevskiy/polygen/main/schema.json",
     "strictByDefault": true,
     "pointerByDefault": true,
-    "defaultDescriptor": "kind",
+    "defaultDiscriminator": "kind",
     "types": [
         {
             "type": "Item",

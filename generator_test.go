@@ -61,9 +61,9 @@ func TestGenerate(t *testing.T) {
 	t.Run("custom values", func(t *testing.T) {
 		subType1Name := "my-subtype-1"
 		config := FileConfig{
-			DefaultDescriptor: "kind",
-			StrictByDefault:   true,
-			PointerByDefault:  true,
+			DefaultDiscriminator: "kind",
+			StrictByDefault:      true,
+			PointerByDefault:     true,
 			Types: []FileTypeConfig{
 				{
 					Type:      "TestType",

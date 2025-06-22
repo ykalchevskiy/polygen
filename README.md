@@ -86,7 +86,7 @@ go install github.com/ykalchevskiy/polygen@latest
 The JSON configuration file supports:
 
 - Multiple type definitions in a single file
-- Global and per-type descriptor field name
+- Global and per-type discriminator field name
 - Global and per-type strict mode settings
 - Global and per-subtype pointer mode settings
 - Custom output paths relative to config file
@@ -97,12 +97,12 @@ The configuration follows this structure:
 
 - `strictByDefault` (optional): Enable strict mode by default
 - `pointerByDefault` (optional): Mark all subtypes as pointer mode by default
-- `defaultDescriptor` (optional): Default JSON field name for type discrimination (default: "type")
+- `defaultDiscriminator` (optional): Default JSON field name for type discrimination (default: "type")
 - `types` (required): Array of type configurations:
   - `type` (required): Name of the polymorphic structure
   - `interface` (required): Name of the interface all subtypes implement
   - `package` (required): Package name for generated code
-  - `descriptor` (optional): Override default JSON field name
+  - `discriminator` (optional): Override default JSON field name
   - `directory` (optional): Output directory path relative to config file
   - `filename` (optional): Output filename (defaults to <type>_polygen.go)
   - `strict` (optional): Override strict mode for this type

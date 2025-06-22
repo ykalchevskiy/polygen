@@ -78,7 +78,7 @@ func TestMain(t *testing.T) {
 		createFile(t, configFile, `{
 	"$schema": "https://raw.githubusercontent.com/ykalchevskiy/polygen/main/schema.json",
 	"strictByDefault": true,
-	"defaultDescriptor": "kind",
+	"defaultDiscriminator": "kind",
 	"types": [
 		{
 			"type": "ItemValue",

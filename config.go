@@ -7,16 +7,16 @@ import (
 	"unicode"
 )
 
-const defaultDescriptor = "type"
+const defaultDiscriminator = "type"
 
 // Config represents the internal configuration used by the generator
 type Config struct {
-	Type       string
-	Interface  string
-	Package    string
-	Types      []TypeMapping
-	Descriptor string
-	Strict     bool
+	Type          string
+	Interface     string
+	Package       string
+	Types         []TypeMapping
+	Discriminator string
+	Strict        bool
 }
 
 // TypeMapping represents a mapping between a concrete type and its JSON type name
@@ -34,8 +34,8 @@ type FileConfig struct {
 	StrictByDefault bool `json:"strictByDefault,omitempty"`
 	// PointerByDefault determines if pointer mode should be enabled by default for all subtypes
 	PointerByDefault bool `json:"pointerByDefault,omitempty"`
-	// DefaultDescriptor is the default JSON field name to distinguish types
-	DefaultDescriptor string `json:"defaultDescriptor,omitempty"`
+	// DefaultDiscriminator is the default JSON field name to distinguish types
+	DefaultDiscriminator string `json:"defaultDiscriminator,omitempty"`
 }
 
 // FileTypeConfig represents configuration for a single polymorphic type
@@ -52,8 +52,8 @@ type FileTypeConfig struct {
 	Directory string `json:"directory,omitempty"`
 	// Filename is the output filename, defaults to <type>_polygen.go in snake_case
 	Filename string `json:"filename,omitempty"`
-	// Descriptor is the JSON field name to distinguish types
-	Descriptor string `json:"descriptor,omitempty"`
+	// Discriminator is the JSON field name to distinguish types
+	Discriminator string `json:"discriminator,omitempty"`
 	// Strict enables strict JSON unmarshaling for this type
 	Strict *bool `json:"strict,omitempty"`
 }
@@ -68,18 +68,18 @@ type FileSubtypeConfig struct {
 
 func convertFileConfigToConfig(typeConfig *FileTypeConfig, config *FileConfig) *Config {
 	cfg := &Config{
-		Type:       typeConfig.Type,
-		Interface:  typeConfig.Interface,
-		Package:    typeConfig.Package,
-		Descriptor: typeConfig.Descriptor,
-		Strict:     config.StrictByDefault,
+		Type:          typeConfig.Type,
+		Interface:     typeConfig.Interface,
+		Package:       typeConfig.Package,
+		Discriminator: typeConfig.Discriminator,
+		Strict:        config.StrictByDefault,
 	}
 
-	if cfg.Descriptor == "" {
-		cfg.Descriptor = config.DefaultDescriptor
+	if cfg.Discriminator == "" {
+		cfg.Discriminator = config.DefaultDiscriminator
 	}
-	if cfg.Descriptor == "" {
-		cfg.Descriptor = defaultDescriptor
+	if cfg.Discriminator == "" {
+		cfg.Discriminator = defaultDiscriminator
 	}
 
 	if typeConfig.Strict != nil {

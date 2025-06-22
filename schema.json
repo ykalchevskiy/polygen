@@ -11,7 +11,7 @@
             "type": "boolean",
             "description": "Enable pointer mode by default for all subtypes"
         },
-        "defaultDescriptor": {
+        "defaultDiscriminator": {
             "type": "string",
             "description": "Default JSON field name to distinguish types (default: \"type\")",
             "default": "type"
@@ -34,9 +34,9 @@
                         "type": "string",
                         "description": "Package name for the generated file"
                     },
-                    "descriptor": {
+                    "discriminator": {
                         "type": "string",
-                        "description": "JSON field name to distinguish types (overrides defaultDescriptor)"
+                        "description": "JSON field name to distinguish types (overrides defaultDiscriminator)"
                     },
                     "directory": {
                         "type": "string",

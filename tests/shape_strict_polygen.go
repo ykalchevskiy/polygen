@@ -49,12 +49,12 @@ func (v ShapeStrict) MarshalJSON() ([]byte, error) {
 		return nil, fmt.Errorf("polygen: cannot get subtype to marshal for ShapeStrict: %v", err)
 	}
 
-	// If it's an empty object, just return descriptor
+	// If it's an empty object, just return discriminator
 	if bytes.Equal(implData, []byte("{}")) {
 		return []byte(fmt.Sprintf(`{"%s":"%s"}`, "type", typeName)), nil
 	}
 
-	// Otherwise, combine descriptor with implementation fields
+	// Otherwise, combine discriminator with implementation fields
 	var buf bytes.Buffer
 
 	buf.WriteString(fmt.Sprintf(`{"%s":"%s",`, "type", typeName))
@@ -88,11 +88,11 @@ func (v *ShapeStrict) UnmarshalJSON(data []byte) error {
 		Type: currTypeName,
 	}
 	if err := json.Unmarshal(data, &typeData); err != nil {
-		return fmt.Errorf("polygen: cannot unmarshal descriptor field type for ShapeStrict: %v", err)
+		return fmt.Errorf("polygen: cannot unmarshal discriminator type for ShapeStrict: %v", err)
 	}
 
 	if typeData.Type == "" {
-		return fmt.Errorf("polygen: missing descriptor field type for ShapeStrict")
+		return fmt.Errorf("polygen: missing discriminator type for ShapeStrict")
 	}
 
 	typeName := typeData.Type

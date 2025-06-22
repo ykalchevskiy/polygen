@@ -43,12 +43,12 @@ func (v Item) MarshalJSON() ([]byte, error) {
 		return nil, fmt.Errorf("polygen: cannot get subtype to marshal for Item: %v", err)
 	}
 
-	// If it's an empty object, just return descriptor
+	// If it's an empty object, just return discriminator
 	if bytes.Equal(implData, []byte("{}")) {
 		return []byte(fmt.Sprintf(`{"%s":"%s"}`, "kind", typeName)), nil
 	}
 
-	// Otherwise, combine descriptor with implementation fields
+	// Otherwise, combine discriminator with implementation fields
 	var buf bytes.Buffer
 
 	buf.WriteString(fmt.Sprintf(`{"%s":"%s",`, "kind", typeName))
@@ -82,11 +82,11 @@ func (v *Item) UnmarshalJSON(data []byte) error {
 		Type: currTypeName,
 	}
 	if err := json.Unmarshal(data, &typeData); err != nil {
-		return fmt.Errorf("polygen: cannot unmarshal descriptor field kind for Item: %v", err)
+		return fmt.Errorf("polygen: cannot unmarshal discriminator kind for Item: %v", err)
 	}
 
 	if typeData.Type == "" {
-		return fmt.Errorf("polygen: missing descriptor field kind for Item")
+		return fmt.Errorf("polygen: missing discriminator kind for Item")
 	}
 
 	typeName := typeData.Type

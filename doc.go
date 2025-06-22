@@ -11,7 +11,7 @@ Create a .polygen.json configuration file:
 	{
 		"$schema": "https://raw.githubusercontent.com/ykalchevskiy/polygen/main/schema.json",
 		"strictByDefault": true,
-		"defaultDescriptor": "kind",
+		"defaultDiscriminator": "kind",
 		"types": [
 			{
 				"type": "Item",
@@ -32,20 +32,20 @@ Create a .polygen.json configuration file:
 
 Configuration options:
 
-	strictByDefault    Enable strict mode by default for all types (optional)
-	pointerByDefault   Enable pointer mode by default for all subtypes (optional)
-	defaultDescriptor  Default JSON field name for type discrimination (default: "type")
-	types             Array of type configurations with the following fields:
-	  - type          Name of the polymorphic structure
-	  - interface     Name of the interface all subtypes implement
-	  - package       Package name for the generated file
-	  - descriptor    Override default descriptor field name (optional)
-	  - directory     Output directory path relative to config file (optional)
-	  - filename      Output filename (defaults to <type>_polygen.go)
-	  - strict        Override strict mode for this type (optional)
-	  - subtypes      Map of Go types to their configurations:
-	                  - name: JSON type name (optional, defaults to subtype in kebab-case)
-	                  - pointer: Use pointer for this type (optional, default: false)
+	strictByDefault         Enable strict mode by default for all types (optional)
+	pointerByDefault        Enable pointer mode by default for all subtypes (optional)
+	defaultDiscriminator    Default JSON field name for type discrimination (default: "type")
+	types                   Array of type configurations with the following fields:
+		- typeName         Name of the polymorphic structure
+	  	- interface        Name of the interface all subtypes implement
+	  	- package          Package name for the generated file
+	  	- discriminator    Override default discriminator field name (optional)
+	  	- directory        Output directory path relative to config file (optional)
+	  	- filename         Output filename (defaults to <type>_polygen.go)
+	  	- strict           Override strict mode for this type (optional)
+	  	- subtypes         Map of Go types to their configurations:
+	    	- name       JSON type name (optional, defaults to subtype in kebab-case)
+			- pointer    Use pointer for this type (optional, default: false)
 
 Example:
 
