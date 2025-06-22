@@ -56,15 +56,15 @@ func main() {
 	fmt.Println(i.IsItem)
 
 	var item Item
-	json.Unmarshal([]byte(`{"kind": "image"}`), &item)
+	_ = json.Unmarshal([]byte(`{"kind": "image"}`), &item)
 	fmt.Println(item.IsItem)
-	json.Unmarshal([]byte(`{"kind": "text", "content": "hello"}`), &item)
+	_ = json.Unmarshal([]byte(`{"kind": "text", "content": "hello"}`), &item)
 	fmt.Println(item.IsItem)
-	json.Unmarshal([]byte(`{"content": "updated"}`), &item) // Updates just the content field
+	_ = json.Unmarshal([]byte(`{"content": "updated"}`), &item)
 	fmt.Println(item.IsItem)
-	json.Unmarshal([]byte(`{"kind": "image", "width": 800}`), &item) // Changes type to ImageItem
+	_ = json.Unmarshal([]byte(`{"kind": "image", "width": 800}`), &item)
 	fmt.Println(item.IsItem)
-	json.Unmarshal([]byte(`{"width": 900}`), &item) // Changes type to ImageItem
+	_ = json.Unmarshal([]byte(`{"width": 900}`), &item)
 	fmt.Println(item.IsItem)
 
 	// Create and marshal items

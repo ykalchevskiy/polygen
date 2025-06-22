@@ -8,12 +8,14 @@ import (
 	"testing"
 )
 
-var marshalTests = []struct {
+type marshalTestCase struct {
 	name    string
 	shape   Shape
 	want    string
 	wantErr bool
-}{
+}
+
+var marshalTests = []marshalTestCase{
 	{
 		name:  "circle",
 		shape: Shape{IsShape: Circle{Radius: 5.0}},
@@ -53,7 +55,7 @@ var marshalTests = []struct {
 		name: "group with attributes",
 		shape: Shape{IsShape: &Group{
 			Name: "test",
-			Attributes: map[string]interface{}{
+			Attributes: map[string]any{
 				"visible": true,
 				"layer":   1,
 				"tags":    []string{"test", "example"},
@@ -78,12 +80,8 @@ var marshalTests = []struct {
 	},
 }
 
-func runMarshalTests(t *testing.T, tests []struct {
-	name    string
-	shape   Shape
-	want    string
-	wantErr bool
-}, isStrict bool) {
+func runMarshalTests(t *testing.T, tests []marshalTestCase, isStrict bool) {
+	t.Helper()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var (
@@ -103,7 +101,7 @@ func runMarshalTests(t *testing.T, tests []struct {
 				return
 			}
 			if err == nil {
-				var gotObj, wantObj interface{}
+				var gotObj, wantObj any
 				if err := json.Unmarshal(got, &gotObj); err != nil {
 					t.Errorf("Failed to unmarshal result: %v", err)
 					return
@@ -130,16 +128,16 @@ func TestShapeMarshalJSON(t *testing.T) {
 	})
 }
 
-type testCase struct {
+type unmarshalTestCase struct {
 	name          string
 	json          string
-	want          interface{}
+	want          any
 	wantErr       bool
 	strictOnly    bool // test applies to strict mode only
 	nonStrictOnly bool // test applies to non-strict mode only
 }
 
-var unmarshalTests = []testCase{
+var unmarshalTests = []unmarshalTestCase{
 	{
 		name: "circle",
 		json: `{"type":"circle","Radius":5}`,
@@ -179,7 +177,7 @@ var unmarshalTests = []testCase{
 		json: `{"type":"group","Name":"test","Attributes":{"visible":true,"layer":1}}`,
 		want: Shape{IsShape: &Group{
 			Name: "test",
-			Attributes: map[string]interface{}{
+			Attributes: map[string]any{
 				"visible": true,
 				"layer":   float64(1),
 			},
@@ -213,7 +211,7 @@ var unmarshalTests = []testCase{
 }
 
 // Test cases that are specific to strict or non-strict mode
-var extraUnmarshalTests = []testCase{
+var extraUnmarshalTests = []unmarshalTestCase{
 	{
 		name:          "with extra fields",
 		json:          `{"type":"circle","Radius":5,"extra":"field"}`,
@@ -229,7 +227,9 @@ var extraUnmarshalTests = []testCase{
 }
 
 // runUnmarshalTests runs the given test cases for both Shape and ShapeStrict types
-func runUnmarshalTests(t *testing.T, tests []testCase, isStrict bool) {
+func runUnmarshalTests(t *testing.T, tests []unmarshalTestCase, isStrict bool) {
+	t.Helper()
+
 	for _, tt := range tests {
 		// Skip tests that are meant for the other mode
 		if (tt.strictOnly && !isStrict) || (tt.nonStrictOnly && isStrict) {
@@ -325,6 +325,8 @@ func TestShapeJSONStreamDecoder(t *testing.T) {
 }
 
 func runJSONStreamDecoder(t *testing.T, isStrict bool) {
+	t.Helper()
+
 	input := strings.Join([]string{
 		`{"type":"circle","Radius":1}`,
 		`{"type":"rectangle","Width":2,"Height":3}`,
@@ -387,7 +389,7 @@ func TestShapeUpdate(t *testing.T) {
 			update:  `{"type":"group","Name":"updated","Attributes":{"status":"ready"}}`,
 			want: Shape{IsShape: &Group{
 				Name: "updated",
-				Attributes: map[string]interface{}{
+				Attributes: map[string]any{
 					"active": true,
 					"status": "ready",
 				},
@@ -426,7 +428,8 @@ func TestShapeUpdate(t *testing.T) {
 					X float64
 					Y float64
 				}{{X: 0, Y: 0}},
-				Labels: []string{"A"}}},
+				Labels: []string{"A"},
+			}},
 		},
 		{
 			name:    "update type field from value to pointer empty",
@@ -452,7 +455,7 @@ func TestShapeUpdate(t *testing.T) {
 			update:  `{"type":"group","Name":"updated","Attributes":{"status":"ready"}}`,
 			want: Shape{IsShape: &Group{
 				Name: "updated",
-				Attributes: map[string]interface{}{
+				Attributes: map[string]any{
 					"status": "ready",
 				},
 			}},
@@ -487,7 +490,7 @@ func TestShapeUpdate(t *testing.T) {
 			update:  `{}`, // Empty JSON object
 			want: Shape{IsShape: &Group{
 				Name: "updated",
-				Attributes: map[string]interface{}{
+				Attributes: map[string]any{
 					"status": "ready",
 				},
 			}},
@@ -522,7 +525,7 @@ func TestShapeUpdate(t *testing.T) {
 			update:  `{"Attributes":{"visible":true}}`,
 			want: Shape{IsShape: &Group{
 				Name: "updated",
-				Attributes: map[string]interface{}{
+				Attributes: map[string]any{
 					"status":  "ready",
 					"visible": true,
 				},
@@ -695,7 +698,7 @@ func TestShape(t *testing.T) {
 	t.Run("non_strict/pointer for pointer type", func(t *testing.T) {
 		shape := Shape{IsShape: &Group{
 			Name: "test",
-			Attributes: map[string]interface{}{
+			Attributes: map[string]any{
 				"active": true,
 			},
 		}}
@@ -720,7 +723,7 @@ func TestShape(t *testing.T) {
 	t.Run("strict/pointer for pointer type", func(t *testing.T) {
 		shape := ShapeStrict{IsShape: &Group{
 			Name: "test",
-			Attributes: map[string]interface{}{
+			Attributes: map[string]any{
 				"active": true,
 			},
 		}}
@@ -741,5 +744,4 @@ func TestShape(t *testing.T) {
 			t.Errorf("Expected name to be 'updated', got: %s", shape.IsShape.(*Group).Name)
 		}
 	})
-
 }
