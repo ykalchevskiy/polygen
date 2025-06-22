@@ -50,13 +50,14 @@ func (v {{.Type}}) MarshalJSON() ([]byte, error) {
 	}
 
 	// If it's an empty object, just return descriptor
-	if string(implData) == "{}" {
-		return []byte(fmt.Sprintf("{\"%s\":\"%s\"}", "{{.Descriptor}}", typeName)), nil
+	if bytes.Equal(implData, []byte("{}")) {
+		return []byte(fmt.Sprintf(`{"%s":"%s"}`, "{{.Descriptor}}", typeName)), nil
 	}
 
 	// Otherwise, combine descriptor with implementation fields
 	var buf bytes.Buffer
-	buf.WriteString(fmt.Sprintf("{\"%s\":\"%s\",", "{{.Descriptor}}", typeName))
+
+	buf.WriteString(fmt.Sprintf(`{"%s":"%s",`, "{{.Descriptor}}", typeName))
 	buf.Write(implData[1:])
 
 	return buf.Bytes(), nil
@@ -70,6 +71,7 @@ func (v *{{.Type}}) UnmarshalJSON(data []byte) error {
 
 	var currTypeName string
 	var currTypeAsPointer bool
+
 	if v.{{.Interface}} != nil {
 		var err error
 		currTypeName, currTypeAsPointer, err = _{{.Type}}GetType(v.{{.Interface}})
@@ -96,6 +98,7 @@ func (v *{{.Type}}) UnmarshalJSON(data []byte) error {
  	typeName := typeData.Type
 
 	var value {{.Interface}}
+
 	switch typeName {
 	{{- range .Types}}
 	case "{{.TypeName}}":
@@ -154,7 +157,7 @@ func (v *{{.Type}}) UnmarshalJSON(data []byte) error {
 						return fmt.Errorf("polygen: cannot unmarshal {{.SubType}} for {{$.Type}}: %v", err)
 					}
 					value = vv.{{.SubType}}
-				}	
+				}
 			{{- end}}
 		{{- else}}
 			{{- if .IsPointer}}

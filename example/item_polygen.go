@@ -44,13 +44,14 @@ func (v Item) MarshalJSON() ([]byte, error) {
 	}
 
 	// If it's an empty object, just return descriptor
-	if string(implData) == "{}" {
-		return []byte(fmt.Sprintf("{\"%s\":\"%s\"}", "kind", typeName)), nil
+	if bytes.Equal(implData, []byte("{}")) {
+		return []byte(fmt.Sprintf(`{"%s":"%s"}`, "kind", typeName)), nil
 	}
 
 	// Otherwise, combine descriptor with implementation fields
 	var buf bytes.Buffer
-	buf.WriteString(fmt.Sprintf("{\"%s\":\"%s\",", "kind", typeName))
+
+	buf.WriteString(fmt.Sprintf(`{"%s":"%s",`, "kind", typeName))
 	buf.Write(implData[1:])
 
 	return buf.Bytes(), nil
@@ -64,6 +65,7 @@ func (v *Item) UnmarshalJSON(data []byte) error {
 
 	var currTypeName string
 	var currTypeAsPointer bool
+
 	if v.IsItem != nil {
 		var err error
 		currTypeName, currTypeAsPointer, err = _ItemGetType(v.IsItem)
@@ -90,6 +92,7 @@ func (v *Item) UnmarshalJSON(data []byte) error {
 	typeName := typeData.Type
 
 	var value IsItem
+
 	switch typeName {
 	case "image":
 		vv := struct {
