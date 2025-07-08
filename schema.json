@@ -50,6 +50,10 @@
                         "type": "boolean",
                         "description": "Enable strict JSON unmarshaling for this type"
                     },
+                    "defaultSubtype": {
+                        "type": "string",
+                        "description": "Default subtype to unmarshal into when the discriminator field is missing (optional)"
+                    },
                     "subtypes": {
                         "type": "object",
                         "description": "Map of Go types to their configurations",

@@ -92,7 +92,11 @@ func (v *{{.Type}}) UnmarshalJSON(data []byte) error {
 	}
 
 	if typeData.Type == "" {
+		{{- if .DefaultSubtype}}
+		typeData.Type = "{{.DefaultSubtype}}"
+		{{- else}}
 		return fmt.Errorf("polygen: missing discriminator {{.Discriminator}} for {{.Type}}")
+		{{- end}}
 	}
 
  	typeName := typeData.Type

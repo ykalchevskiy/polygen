@@ -52,6 +52,32 @@
                     "name": "empty"
                 }
             }
+        },
+        {
+            "type": "ShapeDefault",
+            "interface": "IsShape",
+            "package": "tests",
+            "filename": "shape_default_polygen.go",
+            "defaultSubtype": "circle",
+            "subtypes": {
+                "Circle": {
+                    "name": "circle"
+                },
+                "Rectangle": {
+                    "name": "rectangle"
+                },
+                "Polygon": {
+                    "name": "polygon",
+                    "pointer": true
+                },
+                "Group": {
+                    "name": "group",
+                    "pointer": true
+                },
+                "Empty": {
+                    "name": "empty"
+                }
+            }
         }
     ]
 }

@@ -11,12 +11,13 @@ const defaultDiscriminator = "type"
 
 // Config represents the internal configuration used by the generator
 type Config struct {
-	Type          string
-	Interface     string
-	Package       string
-	Types         []TypeMapping
-	Discriminator string
-	Strict        bool
+	Type           string
+	Interface      string
+	Package        string
+	Types          []TypeMapping
+	Discriminator  string
+	Strict         bool
+	DefaultSubtype string
 }
 
 // TypeMapping represents a mapping between a concrete type and its JSON type name
@@ -56,6 +57,8 @@ type FileTypeConfig struct {
 	Discriminator string `json:"discriminator,omitempty"`
 	// Strict enables strict JSON unmarshaling for this type
 	Strict *bool `json:"strict,omitempty"`
+	// DefaultSubtype is the default subtype to use when the discriminator is missing
+	DefaultSubtype string `json:"defaultSubtype,omitempty"`
 }
 
 // FileSubtypeConfig represents configuration for a subtype
@@ -68,11 +71,12 @@ type FileSubtypeConfig struct {
 
 func convertFileConfigToConfig(typeConfig *FileTypeConfig, config *FileConfig) *Config {
 	cfg := &Config{
-		Type:          typeConfig.Type,
-		Interface:     typeConfig.Interface,
-		Package:       typeConfig.Package,
-		Discriminator: typeConfig.Discriminator,
-		Strict:        config.StrictByDefault,
+		Type:           typeConfig.Type,
+		Interface:      typeConfig.Interface,
+		Package:        typeConfig.Package,
+		Discriminator:  typeConfig.Discriminator,
+		Strict:         config.StrictByDefault,
+		DefaultSubtype: typeConfig.DefaultSubtype,
 	}
 
 	if cfg.Discriminator == "" {
