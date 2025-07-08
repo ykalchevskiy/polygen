@@ -189,11 +189,6 @@ var unmarshalTests = []unmarshalTestCase{
 		wantErr: true,
 	},
 	{
-		name:    "missing type",
-		json:    `{"Radius":5}`,
-		wantErr: true,
-	},
-	{
 		name:    "invalid json",
 		json:    `{`,
 		wantErr: true,
@@ -270,6 +265,47 @@ func TestShapeUnmarshalJSON(t *testing.T) {
 
 	t.Run("strict", func(t *testing.T) {
 		runUnmarshalTests(t, append(unmarshalTests, extraUnmarshalTests...), true)
+	})
+}
+
+func TestShapeUnmarshalJSON_missingDiscriminator(t *testing.T) {
+	j := []byte(`{"Radius":5}`)
+
+	t.Run("non-strict non-default", func(t *testing.T) {
+		expectedError := "polygen: missing discriminator type for Shape"
+
+		var got Shape
+
+		if err := json.Unmarshal(j, &got); err == nil || err.Error() != expectedError {
+			t.Errorf("UnmarshalJSON() expected %q, got %q", expectedError, err)
+			return
+		}
+	})
+
+	t.Run("strict non-default", func(t *testing.T) {
+		expectedError := "polygen: missing discriminator type for ShapeStrict"
+
+		var got ShapeStrict
+
+		if err := json.Unmarshal(j, &got); err == nil || err.Error() != expectedError {
+			t.Errorf("UnmarshalJSON() expected %q, got %q", expectedError, err)
+			return
+		}
+	})
+
+	t.Run("default", func(t *testing.T) {
+		expectedResult := ShapeDefault{IsShape: Circle{Radius: 5.0}}
+
+		var got ShapeDefault
+
+		if err := json.Unmarshal(j, &got); err != nil {
+			t.Errorf("UnmarshalJSON() got unexpected error %q", err)
+			return
+		}
+		if !reflect.DeepEqual(got, expectedResult) {
+			t.Errorf("UnmarshalJSON() expected %q, got %q", expectedResult, got)
+			return
+		}
 	})
 }
 

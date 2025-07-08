@@ -43,6 +43,7 @@ Configuration options:
 	  	- directory        Output directory path relative to config file (optional)
 	  	- filename         Output filename (defaults to <type>_polygen.go)
 	  	- strict           Override strict mode for this type (optional)
+	  	- defaultSubtype   Default subtype to unmarshal into when the discriminator field is missing (optional)
 	  	- subtypes         Map of Go types to their configurations:
 	    	- name       JSON type name (optional, defaults to subtype in kebab-case)
 			- pointer    Use pointer for this type (optional, default: false)
