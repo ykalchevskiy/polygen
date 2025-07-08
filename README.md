@@ -32,7 +32,7 @@ Create a `.polygen.json` file in your project root:
 
 ```json
 {
-    "$schema": "https://raw.githubusercontent.com/ykalchevskiy/polygen/main/schema.json",
+    "$schema": "https://raw.githubusercontent.com/ykalchevskiy/polygen/refs/tags/v0.0.5/schema.json",
     "types": [
         {
             "type": "Item",
