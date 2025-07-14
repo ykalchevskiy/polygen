@@ -11,13 +11,13 @@ const defaultDiscriminator = "type"
 
 // Config represents the internal configuration used by the generator
 type Config struct {
-	Type           string
-	Interface      string
-	Package        string
-	Types          []TypeMapping
-	Discriminator  string
-	Strict         bool
-	DefaultSubtype string
+	Type               string
+	Interface          string
+	Package            string
+	Types              []TypeMapping
+	Discriminator      string
+	Strict             bool
+	DefaultSubtypeName string
 }
 
 // TypeMapping represents a mapping between a concrete type and its JSON type name
@@ -71,12 +71,11 @@ type FileSubtypeConfig struct {
 
 func convertFileConfigToConfig(typeConfig *FileTypeConfig, config *FileConfig) *Config {
 	cfg := &Config{
-		Type:           typeConfig.Type,
-		Interface:      typeConfig.Interface,
-		Package:        typeConfig.Package,
-		Discriminator:  typeConfig.Discriminator,
-		Strict:         config.StrictByDefault,
-		DefaultSubtype: typeConfig.DefaultSubtype,
+		Type:          typeConfig.Type,
+		Interface:     typeConfig.Interface,
+		Package:       typeConfig.Package,
+		Discriminator: typeConfig.Discriminator,
+		Strict:        config.StrictByDefault,
 	}
 
 	if cfg.Discriminator == "" {
@@ -90,12 +89,18 @@ func convertFileConfigToConfig(typeConfig *FileTypeConfig, config *FileConfig) *
 		cfg.Strict = *typeConfig.Strict
 	}
 
+	var defaultSubtypeName string
+
 	for subType, subCfg := range typeConfig.Subtypes {
 		var typeName string
 		if subCfg.Name != nil {
 			typeName = *subCfg.Name
 		} else {
 			typeName = toKebabCase(subType)
+		}
+
+		if subType == typeConfig.DefaultSubtype {
+			defaultSubtypeName = typeName
 		}
 
 		var isPointer bool
@@ -111,6 +116,8 @@ func convertFileConfigToConfig(typeConfig *FileTypeConfig, config *FileConfig) *
 			IsPointer: isPointer,
 		})
 	}
+
+	cfg.DefaultSubtypeName = defaultSubtypeName
 
 	// Sort types by SubType for consistent output
 	sort.Slice(cfg.Types, func(i, j int) bool {

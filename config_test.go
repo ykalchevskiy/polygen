@@ -1,6 +1,9 @@
 package main
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+)
 
 func Test_toKebabCase(t *testing.T) {
 	type args struct {
@@ -91,6 +94,80 @@ func Test_toKebabCase(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := toKebabCase(tt.args.s); got != tt.want {
 				t.Errorf("toKebabCase() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_convertFileConfigToConfig(t *testing.T) {
+	type args struct {
+		typeConfig *FileTypeConfig
+		config     *FileConfig
+	}
+	tests := []struct {
+		name string
+		args args
+		want *Config
+	}{
+		{
+			name: "default discriminator",
+			args: args{
+				typeConfig: &FileTypeConfig{
+					Type:      "Shape",
+					Interface: "Shape",
+					Package:   "main",
+					Subtypes: map[string]FileSubtypeConfig{
+						"Rectangle": {},
+						"Circle":    {},
+					},
+				},
+				config: &FileConfig{
+					DefaultDiscriminator: "kind",
+				},
+			},
+			want: &Config{
+				Type:          "Shape",
+				Interface:     "Shape",
+				Package:       "main",
+				Discriminator: "kind",
+				Types: []TypeMapping{
+					{SubType: "Circle", TypeName: "circle"},
+					{SubType: "Rectangle", TypeName: "rectangle"},
+				},
+			},
+		},
+		{
+			name: "default subtype",
+			args: args{
+				typeConfig: &FileTypeConfig{
+					Type:           "Shape",
+					Interface:      "Shape",
+					Package:        "main",
+					DefaultSubtype: "Rectangle",
+					Subtypes: map[string]FileSubtypeConfig{
+						"Rectangle": {},
+						"Circle":    {},
+					},
+				},
+				config: &FileConfig{},
+			},
+			want: &Config{
+				Type:               "Shape",
+				Interface:          "Shape",
+				Package:            "main",
+				Discriminator:      "type",
+				DefaultSubtypeName: "rectangle",
+				Types: []TypeMapping{
+					{SubType: "Circle", TypeName: "circle"},
+					{SubType: "Rectangle", TypeName: "rectangle"},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := convertFileConfigToConfig(tt.args.typeConfig, tt.args.config); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("convertFileConfigToConfig() = %v, want %v", got, tt.want)
 			}
 		})
 	}

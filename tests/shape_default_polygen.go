@@ -83,19 +83,19 @@ func (v *ShapeDefault) UnmarshalJSON(data []byte) error {
 
 	// First decode just the type field
 	typeData := struct {
-		Type string `json:"type"`
+		TypeName string `json:"type"`
 	}{
-		Type: currTypeName,
+		TypeName: currTypeName,
 	}
 	if err := json.Unmarshal(data, &typeData); err != nil {
 		return fmt.Errorf("polygen: cannot unmarshal discriminator type for ShapeDefault: %v", err)
 	}
 
-	if typeData.Type == "" {
-		typeData.Type = "circle"
+	if typeData.TypeName == "" {
+		typeData.TypeName = "circle"
 	}
 
-	typeName := typeData.Type
+	typeName := typeData.TypeName
 
 	var value IsShape
 

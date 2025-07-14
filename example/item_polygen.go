@@ -77,19 +77,19 @@ func (v *Item) UnmarshalJSON(data []byte) error {
 
 	// First decode just the type field
 	typeData := struct {
-		Type string `json:"kind"`
+		TypeName string `json:"kind"`
 	}{
-		Type: currTypeName,
+		TypeName: currTypeName,
 	}
 	if err := json.Unmarshal(data, &typeData); err != nil {
 		return fmt.Errorf("polygen: cannot unmarshal discriminator kind for Item: %v", err)
 	}
 
-	if typeData.Type == "" {
+	if typeData.TypeName == "" {
 		return fmt.Errorf("polygen: missing discriminator kind for Item")
 	}
 
-	typeName := typeData.Type
+	typeName := typeData.TypeName
 
 	var value IsItem
 

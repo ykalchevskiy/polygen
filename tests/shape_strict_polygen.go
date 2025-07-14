@@ -83,19 +83,19 @@ func (v *ShapeStrict) UnmarshalJSON(data []byte) error {
 
 	// First decode just the type field
 	typeData := struct {
-		Type string `json:"type"`
+		TypeName string `json:"type"`
 	}{
-		Type: currTypeName,
+		TypeName: currTypeName,
 	}
 	if err := json.Unmarshal(data, &typeData); err != nil {
 		return fmt.Errorf("polygen: cannot unmarshal discriminator type for ShapeStrict: %v", err)
 	}
 
-	if typeData.Type == "" {
+	if typeData.TypeName == "" {
 		return fmt.Errorf("polygen: missing discriminator type for ShapeStrict")
 	}
 
-	typeName := typeData.Type
+	typeName := typeData.TypeName
 
 	var value IsShape
 

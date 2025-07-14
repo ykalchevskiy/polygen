@@ -83,23 +83,23 @@ func (v *{{.Type}}) UnmarshalJSON(data []byte) error {
 
 	// First decode just the type field
 	typeData := struct {
-		Type string `json:"{{.Discriminator}}"`
+		TypeName string `json:"{{.Discriminator}}"`
 	}{
-		Type: currTypeName,
+		TypeName: currTypeName,
 	}
 	if err := json.Unmarshal(data, &typeData); err != nil {
 		return fmt.Errorf("polygen: cannot unmarshal discriminator {{.Discriminator}} for {{.Type}}: %v", err)
 	}
 
-	if typeData.Type == "" {
-		{{- if .DefaultSubtype}}
-		typeData.Type = "{{.DefaultSubtype}}"
+	if typeData.TypeName == "" {
+		{{- if .DefaultSubtypeName}}
+		typeData.TypeName = "{{.DefaultSubtypeName}}"
 		{{- else}}
 		return fmt.Errorf("polygen: missing discriminator {{.Discriminator}} for {{.Type}}")
 		{{- end}}
 	}
 
- 	typeName := typeData.Type
+ 	typeName := typeData.TypeName
 
 	var value {{.Interface}}
 

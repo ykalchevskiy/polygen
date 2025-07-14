@@ -58,7 +58,7 @@
             "interface": "IsShape",
             "package": "tests",
             "filename": "shape_default_polygen.go",
-            "defaultSubtype": "circle",
+            "defaultSubtype": "Circle",
             "subtypes": {
                 "Circle": {
                     "name": "circle"
