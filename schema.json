@@ -16,6 +16,10 @@
             "description": "Default JSON field name to distinguish types (default: \"type\")",
             "default": "type"
         },
+        "defaultBuildTag": {
+            "type": "string",
+            "description": "Build constraint for all generated code (e.g. \"linux\", \"linux && amd64\")"
+        },
         "types": {
             "type": "array",
             "items": {
@@ -53,6 +57,10 @@
                     "defaultSubtype": {
                         "type": "string",
                         "description": "Default subtype to unmarshal into when the discriminator field is missing (optional)"
+                    },
+                    "buildTag": {
+                        "type": "string",
+                        "description": "Build constraint for this type (overrides global buildTag)"
                     },
                     "subtypes": {
                         "type": "object",

@@ -64,6 +64,7 @@ func TestGenerate(t *testing.T) {
 			DefaultDiscriminator: "kind",
 			StrictByDefault:      true,
 			PointerByDefault:     true,
+			DefaultBuildTag:      "darwin",
 			Types: []FileTypeConfig{
 				{
 					Type:      "TestType",
@@ -94,6 +95,7 @@ func TestGenerate(t *testing.T) {
 
 		// Test required components
 		required := []string{
+			"\n//go:build darwin\n",
 			"package test",
 			"type TestType struct {",
 			"TestInterface",
