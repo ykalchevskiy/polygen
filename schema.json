@@ -5,7 +5,7 @@
     "properties": {
         "strictByDefault": {
             "type": "boolean",
-            "description": "Enable strict mode by default for all types"
+            "description": "Enable strict mode by default for all types (does not apply to jsonv2)"
         },
         "pointerByDefault": {
             "type": "boolean",
@@ -15,6 +15,10 @@
             "type": "string",
             "description": "Default JSON field name to distinguish types (default: \"type\")",
             "default": "type"
+        },
+        "jsonv2ByDefault": {
+            "type": "boolean",
+            "description": "Enable generation of jsonv2 code by default for all types"
         },
         "defaultBuildTag": {
             "type": "string",
@@ -52,7 +56,7 @@
                     },
                     "strict": {
                         "type": "boolean",
-                        "description": "Enable strict JSON unmarshaling for this type"
+                        "description": "Enable strict JSON unmarshaling for this type (does not apply to jsonv2)"
                     },
                     "defaultSubtype": {
                         "type": "string",
@@ -61,6 +65,10 @@
                     "buildTag": {
                         "type": "string",
                         "description": "Build constraint for this type (overrides global buildTag)"
+                    },
+                    "jsonv2": {
+                        "type": "boolean",
+                        "description": "Enable generation of jsonv2 code for this type"
                     },
                     "subtypes": {
                         "type": "object",

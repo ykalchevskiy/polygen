@@ -19,6 +19,7 @@ type Config struct {
 	Strict             bool
 	DefaultSubtypeName string
 	BuildTag           string
+	JSONV2             bool
 }
 
 // TypeMapping represents a mapping between a concrete type and its JSON type name
@@ -32,7 +33,7 @@ type TypeMapping struct {
 type FileConfig struct {
 	// Types is a list of type configurations to generate
 	Types []FileTypeConfig `json:"types"`
-	// StrictByDefault determines if strict mode should be enabled by default for all types
+	// StrictByDefault determines if strict mode should be enabled by default for all types (does not apply to jsonv2)
 	StrictByDefault bool `json:"strictByDefault,omitempty"`
 	// PointerByDefault determines if pointer mode should be enabled by default for all subtypes
 	PointerByDefault bool `json:"pointerByDefault,omitempty"`
@@ -40,6 +41,8 @@ type FileConfig struct {
 	DefaultDiscriminator string `json:"defaultDiscriminator,omitempty"`
 	// DefaultBuildTag is the build constraint for generated code
 	DefaultBuildTag string `json:"defaultBuildTag,omitempty"`
+	// JSONV2ByDefault determines if jsonv2 generation should be enabled by default
+	JSONV2ByDefault bool `json:"jsonv2ByDefault,omitempty"`
 }
 
 // FileTypeConfig represents configuration for a single polymorphic type
@@ -58,12 +61,14 @@ type FileTypeConfig struct {
 	Filename string `json:"filename,omitempty"`
 	// Discriminator is the JSON field name to distinguish types
 	Discriminator string `json:"discriminator,omitempty"`
-	// Strict enables strict JSON unmarshaling for this type
+	// Strict enables strict JSON unmarshaling for this type (does not apply to jsonv2)
 	Strict *bool `json:"strict,omitempty"`
 	// DefaultSubtype is the default subtype to use when the discriminator is missing
 	DefaultSubtype string `json:"defaultSubtype,omitempty"`
 	// BuildTag is the build constraint for this type
 	BuildTag string `json:"buildTag,omitempty"`
+	// JSONV2 enables generation of jsonv2 code for this type
+	JSONV2 *bool `json:"jsonv2,omitempty"`
 }
 
 // FileSubtypeConfig represents configuration for a subtype
@@ -82,6 +87,7 @@ func convertFileConfigToConfig(typeConfig *FileTypeConfig, config *FileConfig) *
 		Discriminator: typeConfig.Discriminator,
 		Strict:        config.StrictByDefault,
 		BuildTag:      config.DefaultBuildTag,
+		JSONV2:        config.JSONV2ByDefault,
 	}
 
 	if cfg.Discriminator == "" {
@@ -95,8 +101,13 @@ func convertFileConfigToConfig(typeConfig *FileTypeConfig, config *FileConfig) *
 		cfg.Strict = *typeConfig.Strict
 	}
 
+
 	if typeConfig.BuildTag != "" {
 		cfg.BuildTag = typeConfig.BuildTag
+	}
+
+	if typeConfig.JSONV2 != nil {
+		cfg.JSONV2 = *typeConfig.JSONV2
 	}
 
 	var defaultSubtypeName string

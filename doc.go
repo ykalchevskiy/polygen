@@ -32,10 +32,11 @@ Create a .polygen.json configuration file:
 
 Configuration options:
 
-	strictByDefault         Enable strict mode by default for all types (optional)
+	strictByDefault         Enable strict mode by default for all types (optional, does not apply to jsonv2)
 	pointerByDefault        Enable pointer mode by default for all subtypes (optional)
 	defaultDiscriminator    Default JSON field name for type discrimination (default: "type")
 	defaultBuildTag         Build constraint for all generated code (optional, e.g., "linux" or "linux && amd64")
+	jsonv2ByDefault         Enable jsonv2 code generation by default for all types (optional)
 	types                   Array of type configurations with the following fields:
 		- typeName         Name of the polymorphic structure
 	  	- interface        Name of the interface all subtypes implement
@@ -43,9 +44,10 @@ Configuration options:
 	  	- discriminator    Override default discriminator field name (optional)
 	  	- directory        Output directory path relative to config file (optional)
 	  	- filename         Output filename (defaults to <type>_polygen.go)
-	  	- strict           Override strict mode for this type (optional)
+	  	- strict           Override strict mode for this type (optional, does not apply to jsonv2)
 	  	- defaultSubtype   Default subtype to unmarshal into when the discriminator field is missing (optional)
 	  	- buildTag         Override build tag constraint for this type (optional)
+	  	- jsonv2           Enable jsonv2 code generation for this type (optional)
 	  	- subtypes         Map of Go types to their configurations:
 	    	- name       JSON type name (optional, defaults to subtype in kebab-case)
 			- pointer    Use pointer for this type (optional, default: false)

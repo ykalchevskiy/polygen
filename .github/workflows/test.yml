@@ -12,27 +12,30 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go-version: ['1.20', '1.22', '1.24', '1.25', '1.26']
+        go-version: ['1.20', '1.24', '1.25', '1.26']
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Set up Go ${{ matrix.go-version }}
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v6
       with:
         go-version: ${{ matrix.go-version }}
         cache: true
 
-    - name: Run tests
+    - name: Check generated files
       run: |
-        # generate code
         go generate ./...
-
-        # fail if there are any changes in the generated files
         if ! git diff --exit-code; then
           echo "Generated files have changed. Please run 'go generate ./...' and commit the changes."
           exit 1
         fi
 
-        # run tests
-        go test -v ./...
+    - name: Run tests
+      run: go test -v ./...
+    
+    - name: Run tests (jsonV2)
+      if: matrix.go-version == '1.25' || matrix.go-version == '1.26'
+      env:
+        GOEXPERIMENT: jsonv2
+      run: go test -v ./...
