@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func main() {
@@ -47,6 +48,19 @@ func run(configPath string) error {
 
 		if err := os.WriteFile(outputPath, code, 0644); err != nil {
 			return fmt.Errorf("writing generated code for type '%s': %v", typeConfig.Type, err)
+		}
+
+		if cfg.JSONV2 {
+			codeV2, err := generateJSONV2(cfg)
+			if err != nil {
+				return fmt.Errorf("generating jsonv2 code for type '%s': %v", typeConfig.Type, err)
+			}
+
+			outputPathV2 := strings.TrimSuffix(outputPath, ".go") + "_jsonv2.go"
+
+			if err := os.WriteFile(outputPathV2, codeV2, 0644); err != nil {
+				return fmt.Errorf("writing generated jsonv2 code for type '%s': %v", typeConfig.Type, err)
+			}
 		}
 	}
 

@@ -32,7 +32,7 @@ Create a `.polygen.json` file in your project root:
 
 ```json
 {
-    "$schema": "https://raw.githubusercontent.com/ykalchevskiy/polygen/refs/tags/v7/schema.json",
+    "$schema": "https://raw.githubusercontent.com/ykalchevskiy/polygen/refs/tags/v0.0.7/schema.json",
     "types": [
         {
             "type": "Item",
@@ -96,10 +96,11 @@ The JSON configuration file supports:
 
 The configuration follows this structure:
 
-- `strictByDefault` (optional): Enable strict mode by default
+- `strictByDefault` (optional): Enable strict mode by default (does not apply to jsonv2)
 - `pointerByDefault` (optional): Mark all subtypes as pointer mode by default
 - `defaultDiscriminator` (optional): Default JSON field name for type discrimination (default: "type")
 - `defaultBuildTag` (optional): Build constraint for all generated code (e.g., "linux" or "linux && amd64")
+- `jsonv2ByDefault` (optional): Enable jsonv2 code generation by default for all types
 - `types` (required): Array of type configurations:
   - `type` (required): Name of the polymorphic structure
   - `interface` (required): Name of the interface all subtypes implement
@@ -107,9 +108,10 @@ The configuration follows this structure:
   - `discriminator` (optional): Override default JSON field name
   - `directory` (optional): Output directory path relative to config file
   - `filename` (optional): Output filename (defaults to <type>_polygen.go)
-  - `strict` (optional): Override strict mode for this type
+  - `strict` (optional): Override strict mode for this type (does not apply to jsonv2)
   - `defaultSubtype` (optional): Default subtype to unmarshal into when the discriminator field is missing
   - `buildTag` (optional): Override build tag constraint for this type
+  - `jsonv2` (optional): Enable jsonv2 code generation for this type
   - `subtypes` (required): Map of Go type names to their configurations:
     - `name` (optional): JSON type name (defaults to subtype name in kebab-case)
     - `pointer` (optional): Use pointer for this type (defaults to `pointerByDefault`)

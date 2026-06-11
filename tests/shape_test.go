@@ -235,7 +235,9 @@ func runUnmarshalTests(t *testing.T, tests []unmarshalTestCase, isStrict bool) {
 			var err error
 			if isStrict {
 				var got ShapeStrict
-				err = json.Unmarshal([]byte(tt.json), &got)
+				dec := json.NewDecoder(bytes.NewReader([]byte(tt.json)))
+				dec.DisallowUnknownFields()
+				err = dec.Decode(&got)
 				if (err != nil) != tt.wantErr {
 					t.Errorf("ShapeStrict.UnmarshalJSON() error = %v, wantErr %v", err, tt.wantErr)
 					return

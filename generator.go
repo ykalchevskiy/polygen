@@ -11,8 +11,19 @@ import (
 //go:embed template.go.tmpl
 var codeTemplate string
 
+//go:embed template_jsonv2.go.tmpl
+var codeTemplateJSONV2 string
+
 func generate(cfg *Config) ([]byte, error) {
-	tmpl, err := template.New("code").Parse(codeTemplate)
+	return executeTemplate(codeTemplate, cfg)
+}
+
+func generateJSONV2(cfg *Config) ([]byte, error) {
+	return executeTemplate(codeTemplateJSONV2, cfg)
+}
+
+func executeTemplate(tmplStr string, cfg *Config) ([]byte, error) {
+	tmpl, err := template.New("code").Parse(tmplStr)
 	if err != nil {
 		return nil, fmt.Errorf("parsing template: %v", err)
 	}

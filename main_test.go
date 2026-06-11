@@ -152,7 +152,7 @@ func main() {
 		fmt.Printf("error: strict unmarshal should fail with unknown field\n")
 		return
 	}
-	if !strings.Contains(err.Error(), "unknown field") {
+	if !strings.Contains(err.Error(), "unknown field") && !strings.Contains(err.Error(), "unknown object member") {
 		fmt.Printf("error: wrong error type for strict unmarshal: %v\n", err)
 		return
 	}
