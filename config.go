@@ -9,6 +9,12 @@ import (
 
 const defaultDiscriminator = "type"
 
+const (
+	JSONVersionV1   = "v1"
+	JSONVersionV2   = "v2"
+	JSONVersionBoth = "both"
+)
+
 // Config represents the internal configuration used by the generator
 type Config struct {
 	Type               string
@@ -19,7 +25,7 @@ type Config struct {
 	Strict             bool
 	DefaultSubtypeName string
 	BuildTag           string
-	JSONV2             bool
+	JSONVersion        string
 }
 
 // TypeMapping represents a mapping between a concrete type and its JSON type name
@@ -41,8 +47,8 @@ type FileConfig struct {
 	DefaultDiscriminator string `json:"defaultDiscriminator,omitempty"`
 	// DefaultBuildTag is the build constraint for generated code
 	DefaultBuildTag string `json:"defaultBuildTag,omitempty"`
-	// JSONV2ByDefault determines if jsonv2 generation should be enabled by default
-	JSONV2ByDefault bool `json:"jsonv2ByDefault,omitempty"`
+	// JSONVersionByDefault determines the json version generation enabled by default (v1, v2, both)
+	JSONVersionByDefault string `json:"jsonVersionByDefault,omitempty"`
 }
 
 // FileTypeConfig represents configuration for a single polymorphic type
@@ -67,8 +73,8 @@ type FileTypeConfig struct {
 	DefaultSubtype string `json:"defaultSubtype,omitempty"`
 	// BuildTag is the build constraint for this type
 	BuildTag string `json:"buildTag,omitempty"`
-	// JSONV2 enables generation of jsonv2 code for this type
-	JSONV2 *bool `json:"jsonv2,omitempty"`
+	// JSONVersion enables generation of jsonv2 code for this type (v1, v2, both)
+	JSONVersion string `json:"jsonVersion,omitempty"`
 }
 
 // FileSubtypeConfig represents configuration for a subtype
@@ -87,7 +93,7 @@ func convertFileConfigToConfig(typeConfig *FileTypeConfig, config *FileConfig) *
 		Discriminator: typeConfig.Discriminator,
 		Strict:        config.StrictByDefault,
 		BuildTag:      config.DefaultBuildTag,
-		JSONV2:        config.JSONV2ByDefault,
+		JSONVersion:   config.JSONVersionByDefault,
 	}
 
 	if cfg.Discriminator == "" {
@@ -101,13 +107,18 @@ func convertFileConfigToConfig(typeConfig *FileTypeConfig, config *FileConfig) *
 		cfg.Strict = *typeConfig.Strict
 	}
 
-
 	if typeConfig.BuildTag != "" {
 		cfg.BuildTag = typeConfig.BuildTag
 	}
 
-	if typeConfig.JSONV2 != nil {
-		cfg.JSONV2 = *typeConfig.JSONV2
+	if typeConfig.JSONVersion != "" {
+		cfg.JSONVersion = typeConfig.JSONVersion
+	}
+
+	if cfg.JSONVersion == "" {
+		cfg.JSONVersion = JSONVersionV1
+	} else if cfg.JSONVersion != JSONVersionV1 && cfg.JSONVersion != JSONVersionV2 && cfg.JSONVersion != JSONVersionBoth {
+		cfg.JSONVersion = JSONVersionV1
 	}
 
 	var defaultSubtypeName string

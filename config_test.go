@@ -134,6 +134,7 @@ func Test_convertFileConfigToConfig(t *testing.T) {
 					{SubType: "Circle", TypeName: "circle"},
 					{SubType: "Rectangle", TypeName: "rectangle"},
 				},
+				JSONVersion: "v1",
 			},
 		},
 		{
@@ -161,13 +162,67 @@ func Test_convertFileConfigToConfig(t *testing.T) {
 					{SubType: "Circle", TypeName: "circle"},
 					{SubType: "Rectangle", TypeName: "rectangle"},
 				},
+				JSONVersion: "v1",
+			},
+		},
+		{
+			name: "jsonVersion v2 overridden from default",
+			args: args{
+				typeConfig: &FileTypeConfig{
+					Type:        "Shape",
+					Interface:   "Shape",
+					Package:     "main",
+					JSONVersion: "v2",
+					Subtypes: map[string]FileSubtypeConfig{
+						"Rectangle": {},
+					},
+				},
+				config: &FileConfig{
+					JSONVersionByDefault: "both",
+				},
+			},
+			want: &Config{
+				Type:          "Shape",
+				Interface:     "Shape",
+				Package:       "main",
+				Discriminator: "type",
+				Types: []TypeMapping{
+					{SubType: "Rectangle", TypeName: "rectangle"},
+				},
+				JSONVersion: "v2",
+			},
+		},
+		{
+			name: "jsonVersion invalid default fallback",
+			args: args{
+				typeConfig: &FileTypeConfig{
+					Type:      "Shape",
+					Interface: "Shape",
+					Package:   "main",
+					Subtypes: map[string]FileSubtypeConfig{
+						"Rectangle": {},
+					},
+				},
+				config: &FileConfig{
+					JSONVersionByDefault: "invalid-version",
+				},
+			},
+			want: &Config{
+				Type:          "Shape",
+				Interface:     "Shape",
+				Package:       "main",
+				Discriminator: "type",
+				Types: []TypeMapping{
+					{SubType: "Rectangle", TypeName: "rectangle"},
+				},
+				JSONVersion: "v1",
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := convertFileConfigToConfig(tt.args.typeConfig, tt.args.config); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("convertFileConfigToConfig() = %v, want %v", got, tt.want)
+				t.Errorf("convertFileConfigToConfig() = %+v, want %+v", got, tt.want)
 			}
 		})
 	}
