@@ -41,28 +41,36 @@ func run(configPath string) error {
 			return fmt.Errorf("creating output directory '%s' for type '%s': %v", outputPath, typeConfig.Type, err)
 		}
 
-		code, err := generate(cfg)
-		if err != nil {
-			return fmt.Errorf("generating code for type '%s': %v", typeConfig.Type, err)
-		}
-
-		if err := os.WriteFile(outputPath, code, 0644); err != nil {
-			return fmt.Errorf("writing generated code for type '%s': %v", typeConfig.Type, err)
-		}
-
-		if cfg.JSONV2 {
-			codeV2, err := generateJSONV2(cfg)
-			if err != nil {
-				return fmt.Errorf("generating jsonv2 code for type '%s': %v", typeConfig.Type, err)
+		switch cfg.JSONVersion {
+		case JSONVersionBoth:
+			if err := generateAndWrite(cfg, generate, outputPath); err != nil {
+				return fmt.Errorf("v1: %v", err)
 			}
-
 			outputPathV2 := strings.TrimSuffix(outputPath, ".go") + "_jsonv2.go"
-
-			if err := os.WriteFile(outputPathV2, codeV2, 0644); err != nil {
-				return fmt.Errorf("writing generated jsonv2 code for type '%s': %v", typeConfig.Type, err)
+			if err := generateAndWrite(cfg, generateJSONV2, outputPathV2); err != nil {
+				return fmt.Errorf("v2: %v", err)
+			}
+		case JSONVersionV2:
+			if err := generateAndWrite(cfg, generateJSONV2, outputPath); err != nil {
+				return fmt.Errorf("v2: %v", err)
+			}
+		default: // JSONVersionV1 or fallback
+			if err := generateAndWrite(cfg, generate, outputPath); err != nil {
+				return fmt.Errorf("v1: %v", err)
 			}
 		}
 	}
 
+	return nil
+}
+
+func generateAndWrite(cfg *Config, gen func(*Config) ([]byte, error), outputPath string) error {
+	code, err := gen(cfg)
+	if err != nil {
+		return fmt.Errorf("generating code for type '%s': %v", cfg.Type, err)
+	}
+	if err := os.WriteFile(outputPath, code, 0644); err != nil {
+		return fmt.Errorf("writing generated code to '%s': %v", outputPath, err)
+	}
 	return nil
 }

@@ -100,7 +100,7 @@ The configuration follows this structure:
 - `pointerByDefault` (optional): Mark all subtypes as pointer mode by default
 - `defaultDiscriminator` (optional): Default JSON field name for type discrimination (default: "type")
 - `defaultBuildTag` (optional): Build constraint for all generated code (e.g., "linux" or "linux && amd64")
-- `jsonv2ByDefault` (optional): Enable jsonv2 code generation by default for all types
+- `jsonVersionByDefault` (optional): JSON library version to target by default (options: `v1` (default), `v2`, `both`)
 - `types` (required): Array of type configurations:
   - `type` (required): Name of the polymorphic structure
   - `interface` (required): Name of the interface all subtypes implement
@@ -111,7 +111,7 @@ The configuration follows this structure:
   - `strict` (optional): Override strict mode for this type (does not apply to jsonv2)
   - `defaultSubtype` (optional): Default subtype to unmarshal into when the discriminator field is missing
   - `buildTag` (optional): Override build tag constraint for this type
-  - `jsonv2` (optional): Enable jsonv2 code generation for this type
+  - `jsonVersion` (optional): JSON library version to target for this type (options: `v1` (default), `v2`, `both`)
   - `subtypes` (required): Map of Go type names to their configurations:
     - `name` (optional): JSON type name (defaults to subtype name in kebab-case)
     - `pointer` (optional): Use pointer for this type (defaults to `pointerByDefault`)

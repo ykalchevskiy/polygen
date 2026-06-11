@@ -9,7 +9,33 @@ import (
 	"encoding/json/jsontext"
 	"encoding/json/v2"
 	"fmt"
+	{{- if eq .JSONVersion "v2"}}
+	"reflect"
+	{{- end}}
 )
+
+{{- if eq .JSONVersion "v2"}}
+var (
+{{- range .Types}}
+{{- if .IsPointer}}
+	_ {{$.Interface}} = (*{{.SubType}})(nil)
+{{- else}}
+	_ {{$.Interface}} = {{.SubType}}{}
+{{- end}}
+{{- end}}
+)
+
+// _{{.Type}}TypeRegistry maps concrete types to their type names
+var _{{.Type}}TypeRegistry = map[reflect.Type]string{
+{{- range .Types}}
+	reflect.TypeOf((*{{.SubType}})(nil)){{- if not .IsPointer}}.Elem(){{- end}}: "{{.TypeName}}",
+{{- end}}
+}
+
+type {{.Type}} struct {
+	{{.Interface}}
+}
+{{- end}}
 
 func (v {{.Type}}) MarshalJSONTo(enc *jsontext.Encoder) error {
 	if v.{{.Interface}} == nil {
@@ -132,3 +158,21 @@ func (v *{{.Type}}) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
 	}
 	return nil
 }
+
+{{- if eq .JSONVersion "v2"}}
+func _{{.Type}}GetType(v {{.Interface}}) (name string, asPointer bool, _ error) {
+	t := reflect.TypeOf(v)
+	typeName, ok := _{{.Type}}TypeRegistry[t]
+	if ok {
+		return typeName, false, nil
+	}
+	// A pointer can be manually used for a value type as it also implements the interface
+	if t.Kind() == reflect.Ptr {
+		typeName, ok = _{{.Type}}TypeRegistry[t.Elem()]
+		if ok {
+			return typeName, true, nil
+		}
+	}
+	return "", false, fmt.Errorf("unknown subtype: %v", t)
+}
+{{- end}}

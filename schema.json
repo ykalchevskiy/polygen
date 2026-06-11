@@ -16,9 +16,11 @@
             "description": "Default JSON field name to distinguish types (default: \"type\")",
             "default": "type"
         },
-        "jsonv2ByDefault": {
-            "type": "boolean",
-            "description": "Enable generation of jsonv2 code by default for all types"
+        "jsonVersionByDefault": {
+            "type": "string",
+            "enum": ["v1", "v2", "both"],
+            "description": "JSON library version to target by default (v1, v2, or both)",
+            "default": "v1"
         },
         "defaultBuildTag": {
             "type": "string",
@@ -66,9 +68,11 @@
                         "type": "string",
                         "description": "Build constraint for this type (overrides global buildTag)"
                     },
-                    "jsonv2": {
-                        "type": "boolean",
-                        "description": "Enable generation of jsonv2 code for this type"
+                    "jsonVersion": {
+                        "type": "string",
+                        "enum": ["v1", "v2", "both"],
+                        "description": "JSON library version to target for this type (v1, v2, or both)",
+                        "default": "v1"
                     },
                     "subtypes": {
                         "type": "object",
