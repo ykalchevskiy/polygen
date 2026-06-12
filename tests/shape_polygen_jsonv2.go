@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"encoding/json/jsontext"
 	"encoding/json/v2"
+	"errors"
 	"fmt"
 )
 
@@ -42,6 +43,7 @@ func (v Shape) MarshalJSONTo(enc *jsontext.Encoder) error {
 
 	// Otherwise, combine discriminator with implementation fields
 	var buf bytes.Buffer
+
 	buf.Grow(len(`{"type":"",`) + len(typeName) + len(implData) - 1)
 	buf.WriteString(`{"type":"`)
 	buf.WriteString(typeName)
@@ -52,16 +54,20 @@ func (v Shape) MarshalJSONTo(enc *jsontext.Encoder) error {
 }
 
 func (v *Shape) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
-	var currTypeName string
-	var currTypeAsPointer bool
+	var (
+		currTypeName      string
+		currTypeAsPointer bool
+	)
 
 	if v.IsShape != nil {
 		var err error
+
 		currTypeName, currTypeAsPointer, err = _ShapeGetType(v.IsShape)
 		if err != nil {
 			return fmt.Errorf("polygen: cannot get subtype to unmarshal for Shape: %v", err)
 		}
 	}
+
 	_ = currTypeAsPointer // In case of all subtypes being pointers, we must just ignore this
 
 	fullData := &struct {
@@ -78,11 +84,12 @@ func (v *Shape) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
 
 	if fullData == nil {
 		*v = Shape{}
+
 		return nil
 	}
 
 	if fullData.TypeName == "" {
-		return fmt.Errorf("polygen: missing discriminator type for Shape")
+		return errors.New("polygen: missing discriminator type for Shape")
 	}
 
 	typeName := fullData.TypeName
@@ -97,12 +104,14 @@ func (v *Shape) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
 				if err := json.Unmarshal(fullData.Data, &vv, dec.Options()); err != nil {
 					return fmt.Errorf("polygen: cannot unmarshal Circle for Shape: %v", err)
 				}
+
 				value = vv
 			} else {
 				vv := v.IsShape.(Circle)
 				if err := json.Unmarshal(fullData.Data, &vv, dec.Options()); err != nil {
 					return fmt.Errorf("polygen: cannot unmarshal Circle for Shape: %v", err)
 				}
+
 				value = vv
 			}
 		} else {
@@ -110,6 +119,7 @@ func (v *Shape) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
 			if err := json.Unmarshal(fullData.Data, &vv, dec.Options()); err != nil {
 				return fmt.Errorf("polygen: cannot unmarshal Circle for Shape: %v", err)
 			}
+
 			value = vv
 		}
 	case "empty":
@@ -119,12 +129,14 @@ func (v *Shape) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
 				if err := json.Unmarshal(fullData.Data, &vv, dec.Options()); err != nil {
 					return fmt.Errorf("polygen: cannot unmarshal Empty for Shape: %v", err)
 				}
+
 				value = vv
 			} else {
 				vv := v.IsShape.(Empty)
 				if err := json.Unmarshal(fullData.Data, &vv, dec.Options()); err != nil {
 					return fmt.Errorf("polygen: cannot unmarshal Empty for Shape: %v", err)
 				}
+
 				value = vv
 			}
 		} else {
@@ -132,6 +144,7 @@ func (v *Shape) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
 			if err := json.Unmarshal(fullData.Data, &vv, dec.Options()); err != nil {
 				return fmt.Errorf("polygen: cannot unmarshal Empty for Shape: %v", err)
 			}
+
 			value = vv
 		}
 	case "group":
@@ -139,18 +152,22 @@ func (v *Shape) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
 		if currTypeName == "group" {
 			vv = v.IsShape.(*Group)
 		}
+
 		if err := json.Unmarshal(fullData.Data, &vv, dec.Options()); err != nil {
 			return fmt.Errorf("polygen: cannot unmarshal Group for Shape: %v", err)
 		}
+
 		value = vv
 	case "polygon":
 		var vv *Polygon
 		if currTypeName == "polygon" {
 			vv = v.IsShape.(*Polygon)
 		}
+
 		if err := json.Unmarshal(fullData.Data, &vv, dec.Options()); err != nil {
 			return fmt.Errorf("polygen: cannot unmarshal Polygon for Shape: %v", err)
 		}
+
 		value = vv
 	case "rectangle":
 		if currTypeName == "rectangle" {
@@ -159,12 +176,14 @@ func (v *Shape) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
 				if err := json.Unmarshal(fullData.Data, &vv, dec.Options()); err != nil {
 					return fmt.Errorf("polygen: cannot unmarshal Rectangle for Shape: %v", err)
 				}
+
 				value = vv
 			} else {
 				vv := v.IsShape.(Rectangle)
 				if err := json.Unmarshal(fullData.Data, &vv, dec.Options()); err != nil {
 					return fmt.Errorf("polygen: cannot unmarshal Rectangle for Shape: %v", err)
 				}
+
 				value = vv
 			}
 		} else {
@@ -172,6 +191,7 @@ func (v *Shape) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
 			if err := json.Unmarshal(fullData.Data, &vv, dec.Options()); err != nil {
 				return fmt.Errorf("polygen: cannot unmarshal Rectangle for Shape: %v", err)
 			}
+
 			value = vv
 		}
 	default:
@@ -181,5 +201,6 @@ func (v *Shape) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
 	*v = Shape{
 		IsShape: value,
 	}
+
 	return nil
 }

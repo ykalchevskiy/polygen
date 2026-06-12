@@ -16,7 +16,7 @@ var (
 	_ IsShape = Rectangle{}
 )
 
-// _ShapeDefaultTypeRegistry maps concrete types to their type names
+// _ShapeDefaultTypeRegistry maps concrete types to their type names.
 var _ShapeDefaultTypeRegistry = map[reflect.Type]string{
 	reflect.TypeOf((*Circle)(nil)).Elem():    "circle",
 	reflect.TypeOf((*Empty)(nil)).Elem():     "empty",
@@ -60,6 +60,7 @@ func (v ShapeDefault) MarshalJSON() ([]byte, error) {
 
 	// Otherwise, combine discriminator with implementation fields
 	var buf bytes.Buffer
+
 	buf.Grow(len(`{"type":"",`) + len(typeName) + len(implData) - 1)
 	buf.WriteString(`{"type":"`)
 	buf.WriteString(typeName)
@@ -72,19 +73,24 @@ func (v ShapeDefault) MarshalJSON() ([]byte, error) {
 func (v *ShapeDefault) UnmarshalJSON(data []byte) error {
 	if string(data) == "null" {
 		*v = ShapeDefault{}
+
 		return nil
 	}
 
-	var currTypeName string
-	var currTypeAsPointer bool
+	var (
+		currTypeName      string
+		currTypeAsPointer bool
+	)
 
 	if v.IsShape != nil {
 		var err error
+
 		currTypeName, currTypeAsPointer, err = _ShapeDefaultGetType(v.IsShape)
 		if err != nil {
 			return fmt.Errorf("polygen: cannot get subtype to unmarshal for ShapeDefault: %v", err)
 		}
 	}
+
 	_ = currTypeAsPointer // In case of all subtypes being pointers, we must just ignore this
 
 	// First decode just the type field
@@ -113,12 +119,14 @@ func (v *ShapeDefault) UnmarshalJSON(data []byte) error {
 				if err := json.Unmarshal(data, &vv); err != nil {
 					return fmt.Errorf("polygen: cannot unmarshal Circle for ShapeDefault: %v", err)
 				}
+
 				value = vv
 			} else {
 				vv := v.IsShape.(Circle)
 				if err := json.Unmarshal(data, &vv); err != nil {
 					return fmt.Errorf("polygen: cannot unmarshal Circle for ShapeDefault: %v", err)
 				}
+
 				value = vv
 			}
 		} else {
@@ -126,6 +134,7 @@ func (v *ShapeDefault) UnmarshalJSON(data []byte) error {
 			if err := json.Unmarshal(data, &vv); err != nil {
 				return fmt.Errorf("polygen: cannot unmarshal Circle for ShapeDefault: %v", err)
 			}
+
 			value = vv
 		}
 	case "empty":
@@ -135,12 +144,14 @@ func (v *ShapeDefault) UnmarshalJSON(data []byte) error {
 				if err := json.Unmarshal(data, &vv); err != nil {
 					return fmt.Errorf("polygen: cannot unmarshal Empty for ShapeDefault: %v", err)
 				}
+
 				value = vv
 			} else {
 				vv := v.IsShape.(Empty)
 				if err := json.Unmarshal(data, &vv); err != nil {
 					return fmt.Errorf("polygen: cannot unmarshal Empty for ShapeDefault: %v", err)
 				}
+
 				value = vv
 			}
 		} else {
@@ -148,6 +159,7 @@ func (v *ShapeDefault) UnmarshalJSON(data []byte) error {
 			if err := json.Unmarshal(data, &vv); err != nil {
 				return fmt.Errorf("polygen: cannot unmarshal Empty for ShapeDefault: %v", err)
 			}
+
 			value = vv
 		}
 	case "group":
@@ -158,6 +170,7 @@ func (v *ShapeDefault) UnmarshalJSON(data []byte) error {
 		if err := json.Unmarshal(data, &vv); err != nil {
 			return fmt.Errorf("polygen: cannot unmarshal Group for ShapeDefault: %v", err)
 		}
+
 		value = vv
 	case "polygon":
 		var vv *Polygon
@@ -167,6 +180,7 @@ func (v *ShapeDefault) UnmarshalJSON(data []byte) error {
 		if err := json.Unmarshal(data, &vv); err != nil {
 			return fmt.Errorf("polygen: cannot unmarshal Polygon for ShapeDefault: %v", err)
 		}
+
 		value = vv
 	case "rectangle":
 		if currTypeName == "rectangle" {
@@ -175,12 +189,14 @@ func (v *ShapeDefault) UnmarshalJSON(data []byte) error {
 				if err := json.Unmarshal(data, &vv); err != nil {
 					return fmt.Errorf("polygen: cannot unmarshal Rectangle for ShapeDefault: %v", err)
 				}
+
 				value = vv
 			} else {
 				vv := v.IsShape.(Rectangle)
 				if err := json.Unmarshal(data, &vv); err != nil {
 					return fmt.Errorf("polygen: cannot unmarshal Rectangle for ShapeDefault: %v", err)
 				}
+
 				value = vv
 			}
 		} else {
@@ -188,6 +204,7 @@ func (v *ShapeDefault) UnmarshalJSON(data []byte) error {
 			if err := json.Unmarshal(data, &vv); err != nil {
 				return fmt.Errorf("polygen: cannot unmarshal Rectangle for ShapeDefault: %v", err)
 			}
+
 			value = vv
 		}
 	default:
@@ -197,21 +214,25 @@ func (v *ShapeDefault) UnmarshalJSON(data []byte) error {
 	*v = ShapeDefault{
 		IsShape: value,
 	}
+
 	return nil
 }
 
 func _ShapeDefaultGetType(v IsShape) (name string, asPointer bool, _ error) {
 	t := reflect.TypeOf(v)
+
 	typeName, ok := _ShapeDefaultTypeRegistry[t]
 	if ok {
 		return typeName, false, nil
 	}
+
 	// A pointer can be manually used for a value type as it also implements the interface
-	if t.Kind() == reflect.Ptr {
+	if t.Kind() == reflect.Pointer {
 		typeName, ok = _ShapeDefaultTypeRegistry[t.Elem()]
 		if ok {
 			return typeName, true, nil
 		}
 	}
+
 	return "", false, fmt.Errorf("unknown subtype: %v", t)
 }

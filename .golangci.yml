@@ -13,7 +13,6 @@ linters:
     - wsl
 
   exclusions:
-    # generated: disable
     paths:
       - example/
       - tests/shape.go

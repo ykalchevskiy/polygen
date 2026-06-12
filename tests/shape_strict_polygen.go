@@ -4,6 +4,7 @@ package tests
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"reflect"
 )
@@ -16,7 +17,7 @@ var (
 	_ IsShape = Rectangle{}
 )
 
-// _ShapeStrictTypeRegistry maps concrete types to their type names
+// _ShapeStrictTypeRegistry maps concrete types to their type names.
 var _ShapeStrictTypeRegistry = map[reflect.Type]string{
 	reflect.TypeOf((*Circle)(nil)).Elem():    "circle",
 	reflect.TypeOf((*Empty)(nil)).Elem():     "empty",
@@ -60,6 +61,7 @@ func (v ShapeStrict) MarshalJSON() ([]byte, error) {
 
 	// Otherwise, combine discriminator with implementation fields
 	var buf bytes.Buffer
+
 	buf.Grow(len(`{"type":"",`) + len(typeName) + len(implData) - 1)
 	buf.WriteString(`{"type":"`)
 	buf.WriteString(typeName)
@@ -72,19 +74,24 @@ func (v ShapeStrict) MarshalJSON() ([]byte, error) {
 func (v *ShapeStrict) UnmarshalJSON(data []byte) error {
 	if string(data) == "null" {
 		*v = ShapeStrict{}
+
 		return nil
 	}
 
-	var currTypeName string
-	var currTypeAsPointer bool
+	var (
+		currTypeName      string
+		currTypeAsPointer bool
+	)
 
 	if v.IsShape != nil {
 		var err error
+
 		currTypeName, currTypeAsPointer, err = _ShapeStrictGetType(v.IsShape)
 		if err != nil {
 			return fmt.Errorf("polygen: cannot get subtype to unmarshal for ShapeStrict: %v", err)
 		}
 	}
+
 	_ = currTypeAsPointer // In case of all subtypes being pointers, we must just ignore this
 
 	// First decode just the type field
@@ -98,7 +105,7 @@ func (v *ShapeStrict) UnmarshalJSON(data []byte) error {
 	}
 
 	if typeData.TypeName == "" {
-		return fmt.Errorf("polygen: missing discriminator type for ShapeStrict")
+		return errors.New("polygen: missing discriminator type for ShapeStrict")
 	}
 
 	typeName := typeData.TypeName
@@ -111,38 +118,50 @@ func (v *ShapeStrict) UnmarshalJSON(data []byte) error {
 			if currTypeAsPointer {
 				vv := struct {
 					*Circle
+
 					Type string `json:"type"`
 				}{}
 				vv.Circle = v.IsShape.(*Circle)
+
 				decoder := json.NewDecoder(bytes.NewReader(data))
 				decoder.DisallowUnknownFields()
+
 				if err := decoder.Decode(&vv); err != nil {
 					return fmt.Errorf("polygen: cannot unmarshal Circle for ShapeStrict: %v", err)
 				}
+
 				value = vv.Circle
 			} else {
 				vv := struct {
 					Circle
+
 					Type string `json:"type"`
 				}{}
 				vv.Circle = v.IsShape.(Circle)
+
 				decoder := json.NewDecoder(bytes.NewReader(data))
 				decoder.DisallowUnknownFields()
+
 				if err := decoder.Decode(&vv); err != nil {
 					return fmt.Errorf("polygen: cannot unmarshal Circle for ShapeStrict: %v", err)
 				}
+
 				value = vv.Circle
 			}
 		} else {
 			vv := struct {
 				Circle
+
 				Type string `json:"type"`
 			}{}
+
 			decoder := json.NewDecoder(bytes.NewReader(data))
 			decoder.DisallowUnknownFields()
+
 			if err := decoder.Decode(&vv); err != nil {
 				return fmt.Errorf("polygen: cannot unmarshal Circle for ShapeStrict: %v", err)
 			}
+
 			value = vv.Circle
 		}
 	case "empty":
@@ -150,43 +169,56 @@ func (v *ShapeStrict) UnmarshalJSON(data []byte) error {
 			if currTypeAsPointer {
 				vv := struct {
 					*Empty
+
 					Type string `json:"type"`
 				}{}
 				vv.Empty = v.IsShape.(*Empty)
+
 				decoder := json.NewDecoder(bytes.NewReader(data))
 				decoder.DisallowUnknownFields()
+
 				if err := decoder.Decode(&vv); err != nil {
 					return fmt.Errorf("polygen: cannot unmarshal Empty for ShapeStrict: %v", err)
 				}
+
 				value = vv.Empty
 			} else {
 				vv := struct {
 					Empty
+
 					Type string `json:"type"`
 				}{}
 				vv.Empty = v.IsShape.(Empty)
+
 				decoder := json.NewDecoder(bytes.NewReader(data))
 				decoder.DisallowUnknownFields()
+
 				if err := decoder.Decode(&vv); err != nil {
 					return fmt.Errorf("polygen: cannot unmarshal Empty for ShapeStrict: %v", err)
 				}
+
 				value = vv.Empty
 			}
 		} else {
 			vv := struct {
 				Empty
+
 				Type string `json:"type"`
 			}{}
+
 			decoder := json.NewDecoder(bytes.NewReader(data))
 			decoder.DisallowUnknownFields()
+
 			if err := decoder.Decode(&vv); err != nil {
 				return fmt.Errorf("polygen: cannot unmarshal Empty for ShapeStrict: %v", err)
 			}
+
 			value = vv.Empty
 		}
 	case "group":
 		vv := struct {
 			*Group
+
 			Type string `json:"type"`
 		}{}
 		if currTypeName == "group" {
@@ -194,15 +226,19 @@ func (v *ShapeStrict) UnmarshalJSON(data []byte) error {
 		} else {
 			vv.Group = new(Group)
 		}
+
 		decoder := json.NewDecoder(bytes.NewReader(data))
 		decoder.DisallowUnknownFields()
+
 		if err := decoder.Decode(&vv); err != nil {
 			return fmt.Errorf("polygen: cannot unmarshal Group for ShapeStrict: %v", err)
 		}
+
 		value = vv.Group
 	case "polygon":
 		vv := struct {
 			*Polygon
+
 			Type string `json:"type"`
 		}{}
 		if currTypeName == "polygon" {
@@ -210,49 +246,64 @@ func (v *ShapeStrict) UnmarshalJSON(data []byte) error {
 		} else {
 			vv.Polygon = new(Polygon)
 		}
+
 		decoder := json.NewDecoder(bytes.NewReader(data))
 		decoder.DisallowUnknownFields()
+
 		if err := decoder.Decode(&vv); err != nil {
 			return fmt.Errorf("polygen: cannot unmarshal Polygon for ShapeStrict: %v", err)
 		}
+
 		value = vv.Polygon
 	case "rectangle":
 		if currTypeName == "rectangle" {
 			if currTypeAsPointer {
 				vv := struct {
 					*Rectangle
+
 					Type string `json:"type"`
 				}{}
 				vv.Rectangle = v.IsShape.(*Rectangle)
+
 				decoder := json.NewDecoder(bytes.NewReader(data))
 				decoder.DisallowUnknownFields()
+
 				if err := decoder.Decode(&vv); err != nil {
 					return fmt.Errorf("polygen: cannot unmarshal Rectangle for ShapeStrict: %v", err)
 				}
+
 				value = vv.Rectangle
 			} else {
 				vv := struct {
 					Rectangle
+
 					Type string `json:"type"`
 				}{}
 				vv.Rectangle = v.IsShape.(Rectangle)
+
 				decoder := json.NewDecoder(bytes.NewReader(data))
 				decoder.DisallowUnknownFields()
+
 				if err := decoder.Decode(&vv); err != nil {
 					return fmt.Errorf("polygen: cannot unmarshal Rectangle for ShapeStrict: %v", err)
 				}
+
 				value = vv.Rectangle
 			}
 		} else {
 			vv := struct {
 				Rectangle
+
 				Type string `json:"type"`
 			}{}
+
 			decoder := json.NewDecoder(bytes.NewReader(data))
 			decoder.DisallowUnknownFields()
+
 			if err := decoder.Decode(&vv); err != nil {
 				return fmt.Errorf("polygen: cannot unmarshal Rectangle for ShapeStrict: %v", err)
 			}
+
 			value = vv.Rectangle
 		}
 	default:
@@ -262,21 +313,25 @@ func (v *ShapeStrict) UnmarshalJSON(data []byte) error {
 	*v = ShapeStrict{
 		IsShape: value,
 	}
+
 	return nil
 }
 
 func _ShapeStrictGetType(v IsShape) (name string, asPointer bool, _ error) {
 	t := reflect.TypeOf(v)
+
 	typeName, ok := _ShapeStrictTypeRegistry[t]
 	if ok {
 		return typeName, false, nil
 	}
+
 	// A pointer can be manually used for a value type as it also implements the interface
-	if t.Kind() == reflect.Ptr {
+	if t.Kind() == reflect.Pointer {
 		typeName, ok = _ShapeStrictTypeRegistry[t.Elem()]
 		if ok {
 			return typeName, true, nil
 		}
 	}
+
 	return "", false, fmt.Errorf("unknown subtype: %v", t)
 }
