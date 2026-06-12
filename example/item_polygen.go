@@ -4,6 +4,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"reflect"
 )
@@ -13,7 +14,7 @@ var (
 	_ IsItem = TextItem{}
 )
 
-// _ItemTypeRegistry maps concrete types to their type names
+// _ItemTypeRegistry maps concrete types to their type names.
 var _ItemTypeRegistry = map[reflect.Type]string{
 	reflect.TypeOf((*ImageItem)(nil)):       "image",
 	reflect.TypeOf((*TextItem)(nil)).Elem(): "text",
@@ -54,6 +55,7 @@ func (v Item) MarshalJSON() ([]byte, error) {
 
 	// Otherwise, combine discriminator with implementation fields
 	var buf bytes.Buffer
+
 	buf.Grow(len(`{"kind":"",`) + len(typeName) + len(implData) - 1)
 	buf.WriteString(`{"kind":"`)
 	buf.WriteString(typeName)
@@ -66,19 +68,24 @@ func (v Item) MarshalJSON() ([]byte, error) {
 func (v *Item) UnmarshalJSON(data []byte) error {
 	if string(data) == "null" {
 		*v = Item{}
+
 		return nil
 	}
 
-	var currTypeName string
-	var currTypeAsPointer bool
+	var (
+		currTypeName      string
+		currTypeAsPointer bool
+	)
 
 	if v.IsItem != nil {
 		var err error
+
 		currTypeName, currTypeAsPointer, err = _ItemGetType(v.IsItem)
 		if err != nil {
 			return fmt.Errorf("polygen: cannot get subtype to unmarshal for Item: %v", err)
 		}
 	}
+
 	_ = currTypeAsPointer // In case of all subtypes being pointers, we must just ignore this
 
 	// First decode just the type field
@@ -92,7 +99,7 @@ func (v *Item) UnmarshalJSON(data []byte) error {
 	}
 
 	if typeData.TypeName == "" {
-		return fmt.Errorf("polygen: missing discriminator kind for Item")
+		return errors.New("polygen: missing discriminator kind for Item")
 	}
 
 	typeName := typeData.TypeName
@@ -103,6 +110,7 @@ func (v *Item) UnmarshalJSON(data []byte) error {
 	case "image":
 		vv := struct {
 			*ImageItem
+
 			Type string `json:"kind"`
 		}{}
 		if currTypeName == "image" {
@@ -110,49 +118,64 @@ func (v *Item) UnmarshalJSON(data []byte) error {
 		} else {
 			vv.ImageItem = new(ImageItem)
 		}
+
 		decoder := json.NewDecoder(bytes.NewReader(data))
 		decoder.DisallowUnknownFields()
+
 		if err := decoder.Decode(&vv); err != nil {
 			return fmt.Errorf("polygen: cannot unmarshal ImageItem for Item: %v", err)
 		}
+
 		value = vv.ImageItem
 	case "text":
 		if currTypeName == "text" {
 			if currTypeAsPointer {
 				vv := struct {
 					*TextItem
+
 					Type string `json:"kind"`
 				}{}
 				vv.TextItem = v.IsItem.(*TextItem)
+
 				decoder := json.NewDecoder(bytes.NewReader(data))
 				decoder.DisallowUnknownFields()
+
 				if err := decoder.Decode(&vv); err != nil {
 					return fmt.Errorf("polygen: cannot unmarshal TextItem for Item: %v", err)
 				}
+
 				value = vv.TextItem
 			} else {
 				vv := struct {
 					TextItem
+
 					Type string `json:"kind"`
 				}{}
 				vv.TextItem = v.IsItem.(TextItem)
+
 				decoder := json.NewDecoder(bytes.NewReader(data))
 				decoder.DisallowUnknownFields()
+
 				if err := decoder.Decode(&vv); err != nil {
 					return fmt.Errorf("polygen: cannot unmarshal TextItem for Item: %v", err)
 				}
+
 				value = vv.TextItem
 			}
 		} else {
 			vv := struct {
 				TextItem
+
 				Type string `json:"kind"`
 			}{}
+
 			decoder := json.NewDecoder(bytes.NewReader(data))
 			decoder.DisallowUnknownFields()
+
 			if err := decoder.Decode(&vv); err != nil {
 				return fmt.Errorf("polygen: cannot unmarshal TextItem for Item: %v", err)
 			}
+
 			value = vv.TextItem
 		}
 	default:
@@ -162,21 +185,25 @@ func (v *Item) UnmarshalJSON(data []byte) error {
 	*v = Item{
 		IsItem: value,
 	}
+
 	return nil
 }
 
 func _ItemGetType(v IsItem) (name string, asPointer bool, _ error) {
 	t := reflect.TypeOf(v)
+
 	typeName, ok := _ItemTypeRegistry[t]
 	if ok {
 		return typeName, false, nil
 	}
+
 	// A pointer can be manually used for a value type as it also implements the interface
-	if t.Kind() == reflect.Ptr {
+	if t.Kind() == reflect.Pointer {
 		typeName, ok = _ItemTypeRegistry[t.Elem()]
 		if ok {
 			return typeName, true, nil
 		}
 	}
+
 	return "", false, fmt.Errorf("unknown subtype: %v", t)
 }
