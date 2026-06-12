@@ -1,0 +1,47 @@
+version: "2"
+
+linters:
+  default: all
+
+  disable:
+    - err113
+    - errorlint
+    - exhaustruct
+    - gomodguard
+    - gosec
+    - noinlineerr
+    - wsl
+
+  exclusions:
+    # generated: disable
+    paths:
+      - example/
+      - tests/shape.go
+      - test.go
+
+  settings:
+    cyclop:
+      max-complexity: 15
+    funlen:
+      lines: 100
+    mnd:
+      ignored-numbers:
+        - '0o644'
+        - '0o755'
+    varnamelen:
+      ignore-decls:
+        - i int
+      ignore-map-index-ok: true
+      ignore-type-assert-ok: true
+
+formatters:
+  enable:
+    - gci
+    - gofmt
+    - gofumpt
+    - goimports
+    - golines
+  
+  settings:
+    golines:
+      max-len: 120

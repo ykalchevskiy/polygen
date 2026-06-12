@@ -12,6 +12,7 @@ import (
 
 func main() {
 	configPath := flag.String("config", ".polygen.json", "Path to the configuration file")
+
 	flag.Parse()
 
 	if err := run(*configPath); err != nil {
@@ -37,7 +38,7 @@ func run(configPath string) error {
 
 		outputPath := getOutputPath(&typeConfig, configDir)
 
-		if err := os.MkdirAll(filepath.Dir(outputPath), 0755); err != nil {
+		if err := os.MkdirAll(filepath.Dir(outputPath), 0o755); err != nil {
 			return fmt.Errorf("creating output directory '%s' for type '%s': %v", outputPath, typeConfig.Type, err)
 		}
 
@@ -46,6 +47,7 @@ func run(configPath string) error {
 			if err := generateAndWrite(cfg, generate, outputPath); err != nil {
 				return fmt.Errorf("v1: %v", err)
 			}
+
 			outputPathV2 := strings.TrimSuffix(outputPath, ".go") + "_jsonv2.go"
 			if err := generateAndWrite(cfg, generateJSONV2, outputPathV2); err != nil {
 				return fmt.Errorf("v2: %v", err)
@@ -69,8 +71,10 @@ func generateAndWrite(cfg *Config, gen func(*Config) ([]byte, error), outputPath
 	if err != nil {
 		return fmt.Errorf("generating code for type '%s': %v", cfg.Type, err)
 	}
-	if err := os.WriteFile(outputPath, code, 0644); err != nil {
+
+	if err := os.WriteFile(outputPath, code, 0o644); err != nil {
 		return fmt.Errorf("writing generated code to '%s': %v", outputPath, err)
 	}
+
 	return nil
 }

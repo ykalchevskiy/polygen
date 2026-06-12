@@ -15,7 +15,7 @@ const (
 	JSONVersionBoth = "both"
 )
 
-// Config represents the internal configuration used by the generator
+// Config represents the internal configuration used by the generator.
 type Config struct {
 	Type               string
 	Interface          string
@@ -28,14 +28,14 @@ type Config struct {
 	JSONVersion        string
 }
 
-// TypeMapping represents a mapping between a concrete type and its JSON type name
+// TypeMapping represents a mapping between a concrete type and its JSON type name.
 type TypeMapping struct {
 	SubType   string
 	TypeName  string
 	IsPointer bool
 }
 
-// FileConfig represents the configuration file structure
+// FileConfig represents the configuration file structure.
 type FileConfig struct {
 	// Types is a list of type configurations to generate
 	Types []FileTypeConfig `json:"types"`
@@ -51,7 +51,7 @@ type FileConfig struct {
 	JSONVersionByDefault string `json:"jsonVersionByDefault,omitempty"`
 }
 
-// FileTypeConfig represents configuration for a single polymorphic type
+// FileTypeConfig represents configuration for a single polymorphic type.
 type FileTypeConfig struct {
 	// Type is the name of the polymorphic structure to generate
 	Type string `json:"type"`
@@ -77,7 +77,7 @@ type FileTypeConfig struct {
 	JSONVersion string `json:"jsonVersion,omitempty"`
 }
 
-// FileSubtypeConfig represents configuration for a subtype
+// FileSubtypeConfig represents configuration for a subtype.
 type FileSubtypeConfig struct {
 	// Name is the JSON type name, defaults to the subtype name in snake_case if not specified
 	Name *string `json:"name,omitempty"`
@@ -99,6 +99,7 @@ func convertFileConfigToConfig(typeConfig *FileTypeConfig, config *FileConfig) *
 	if cfg.Discriminator == "" {
 		cfg.Discriminator = config.DefaultDiscriminator
 	}
+
 	if cfg.Discriminator == "" {
 		cfg.Discriminator = defaultDiscriminator
 	}
@@ -176,12 +177,12 @@ func getOutputPath(typeConfig *FileTypeConfig, configDir string) string {
 	return outputPath
 }
 
-// toKebabCase converts a string from PascalCase to kebab-case
+// toKebabCase converts a string from PascalCase to kebab-case.
 func toKebabCase(s string) string {
 	return toCase(s, rune('-'))
 }
 
-// toSnakeCase converts a string from PascalCase to snake_case
+// toSnakeCase converts a string from PascalCase to snake_case.
 func toSnakeCase(s string) string {
 	return toCase(s, rune('_'))
 }
@@ -198,21 +199,23 @@ func toCase(s string, sep rune) string {
 		if i > 0 {
 			prev := runes[i-1]
 			next := rune(0)
+
 			if i+1 < length {
 				next = runes[i+1]
 			}
 
-			// lower -> Upper (e.g., myTest -> my_test)
-			if unicode.IsLower(prev) && unicode.IsUpper(current) {
+			switch {
+			case unicode.IsLower(prev) && unicode.IsUpper(current):
+				// lower -> Upper (e.g., myTest -> my_test)
 				result.WriteRune(sep)
-			} else
-			// (e.g., HTTPServer -> http_server)
-			if unicode.IsUpper(prev) && unicode.IsUpper(current) && next != 0 && unicode.IsLower(next) {
+			case unicode.IsUpper(prev) && unicode.IsUpper(current) && next != 0 && unicode.IsLower(next):
+				// (e.g., HTTPServer -> http_server)
 				result.WriteRune(sep)
-			} else
-			// (e.g., test123 -> test_123)
-			if (unicode.IsLetter(prev) && unicode.IsDigit(current)) ||
-				(unicode.IsDigit(prev) && unicode.IsLetter(current)) {
+			case unicode.IsLetter(prev) && unicode.IsDigit(current):
+				// (e.g., test123 -> test_123)
+				result.WriteRune(sep)
+			case unicode.IsDigit(prev) && unicode.IsLetter(current):
+				// (e.g., version2Test -> version_2_test)
 				result.WriteRune(sep)
 			}
 		}

@@ -635,8 +635,8 @@ func TestShapeSettability(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to unmarshal value: %v", err)
 		}
-
-		reflect.ValueOf(&value).Elem().FieldByName("IsShape").Elem().FieldByName("Radius").SetInt(10) // This should panic
+		// This should panic
+		reflect.ValueOf(&value).Elem().FieldByName("IsShape").Elem().FieldByName("Radius").SetInt(10)
 
 		t.Errorf("Expected panic when setting value field, but did not panic")
 	})
