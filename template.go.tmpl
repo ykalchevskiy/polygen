@@ -56,13 +56,19 @@ func (v {{.Type}}) MarshalJSON() ([]byte, error) {
 
 	// If it's an empty object, just return discriminator
 	if bytes.Equal(implData, []byte("{}")) {
-		return []byte(fmt.Sprintf(`{"%s":"%s"}`, "{{.Discriminator}}", typeName)), nil
+		return []byte(`{"{{.Discriminator}}":"` + typeName + `"}`), nil
+	}
+
+	if len(implData) == 0 || implData[0] != '{' {
+		return nil, fmt.Errorf("polygen: expected JSON object for {{.Interface}} (%T), got %s", v.{{.Interface}}, implData)
 	}
 
 	// Otherwise, combine discriminator with implementation fields
 	var buf bytes.Buffer
-
-	buf.WriteString(fmt.Sprintf(`{"%s":"%s",`, "{{.Discriminator}}", typeName))
+	buf.Grow(len(`{"{{.Discriminator}}":"",`) + len(typeName) + len(implData) - 1)
+	buf.WriteString(`{"{{.Discriminator}}":"`)
+	buf.WriteString(typeName)
+	buf.WriteString(`",`)
 	buf.Write(implData[1:])
 
 	return buf.Bytes(), nil

@@ -55,7 +55,7 @@ func TestMain(t *testing.T) {
 			"IsItemValue",
 			"func (v ItemValue) MarshalJSON() ([]byte, error)",
 			"func (v *ItemValue) UnmarshalJSON(data []byte) error",
-			`"type", typeName`,
+			`"type":"`,
 			`case "item-value-1":`,
 			`case "item-value-2":`,
 			`reflect.TypeOf((*ItemValue1)(nil)).Elem():`,
