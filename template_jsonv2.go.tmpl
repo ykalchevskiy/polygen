@@ -59,13 +59,19 @@ func (v {{.Type}}) MarshalJSONTo(enc *jsontext.Encoder) error {
 
 	// If it's an empty object, just return discriminator
 	if bytes.Equal(implData, []byte("{}")) {
-		return enc.WriteValue([]byte(fmt.Sprintf(`{"%s":"%s"}`, "{{.Discriminator}}", typeName)))
+		return enc.WriteValue([]byte(`{"{{.Discriminator}}":"` + typeName + `"}`))
+	}
+
+	if len(implData) == 0 || implData[0] != '{' {
+		return fmt.Errorf("polygen: expected JSON object for {{.Interface}} (%T), got %s", v.{{.Interface}}, implData)
 	}
 
 	// Otherwise, combine discriminator with implementation fields
 	var buf bytes.Buffer
-
-	buf.WriteString(fmt.Sprintf(`{"%s":"%s",`, "{{.Discriminator}}", typeName))
+	buf.Grow(len(`{"{{.Discriminator}}":"",`) + len(typeName) + len(implData) - 1)
+	buf.WriteString(`{"{{.Discriminator}}":"`)
+	buf.WriteString(typeName)
+	buf.WriteString(`",`)
 	buf.Write(implData[1:])
 
 	return enc.WriteValue(buf.Bytes())

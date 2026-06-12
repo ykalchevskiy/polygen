@@ -51,13 +51,19 @@ func (v ShapeStrict) MarshalJSON() ([]byte, error) {
 
 	// If it's an empty object, just return discriminator
 	if bytes.Equal(implData, []byte("{}")) {
-		return []byte(fmt.Sprintf(`{"%s":"%s"}`, "type", typeName)), nil
+		return []byte(`{"type":"` + typeName + `"}`), nil
+	}
+
+	if len(implData) == 0 || implData[0] != '{' {
+		return nil, fmt.Errorf("polygen: expected JSON object for IsShape (%T), got %s", v.IsShape, implData)
 	}
 
 	// Otherwise, combine discriminator with implementation fields
 	var buf bytes.Buffer
-
-	buf.WriteString(fmt.Sprintf(`{"%s":"%s",`, "type", typeName))
+	buf.Grow(len(`{"type":"",`) + len(typeName) + len(implData) - 1)
+	buf.WriteString(`{"type":"`)
+	buf.WriteString(typeName)
+	buf.WriteString(`",`)
 	buf.Write(implData[1:])
 
 	return buf.Bytes(), nil

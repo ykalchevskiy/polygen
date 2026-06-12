@@ -45,13 +45,19 @@ func (v Item) MarshalJSON() ([]byte, error) {
 
 	// If it's an empty object, just return discriminator
 	if bytes.Equal(implData, []byte("{}")) {
-		return []byte(fmt.Sprintf(`{"%s":"%s"}`, "kind", typeName)), nil
+		return []byte(`{"kind":"` + typeName + `"}`), nil
+	}
+
+	if len(implData) == 0 || implData[0] != '{' {
+		return nil, fmt.Errorf("polygen: expected JSON object for IsItem (%T), got %s", v.IsItem, implData)
 	}
 
 	// Otherwise, combine discriminator with implementation fields
 	var buf bytes.Buffer
-
-	buf.WriteString(fmt.Sprintf(`{"%s":"%s",`, "kind", typeName))
+	buf.Grow(len(`{"kind":"",`) + len(typeName) + len(implData) - 1)
+	buf.WriteString(`{"kind":"`)
+	buf.WriteString(typeName)
+	buf.WriteString(`",`)
 	buf.Write(implData[1:])
 
 	return buf.Bytes(), nil
