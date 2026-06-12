@@ -9,7 +9,7 @@ Usage:
 Create a .polygen.json configuration file:
 
 	{
-		"$schema": "https://raw.githubusercontent.com/ykalchevskiy/polygen/refs/tags/v0.0.7/schema.json",
+		"$schema": "https://raw.githubusercontent.com/ykalchevskiy/polygen/refs/tags/v1.0.1/schema.json",
 		"strictByDefault": true,
 		"defaultDiscriminator": "kind",
 		"types": [
