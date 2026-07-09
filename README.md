@@ -1,7 +1,6 @@
 # polygen
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/ykalchevskiy/polygen.svg)](https://pkg.go.dev/github.com/ykalchevskiy/polygen)
-[![Go Report Card](https://goreportcard.com/badge/github.com/ykalchevskiy/polygen)](https://goreportcard.com/report/github.com/ykalchevskiy/polygen)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/ykalchevskiy/polygen)](https://golang.org/dl/)
 
 A Go code generator for creating polymorphic data structures with JSON serialization support.
