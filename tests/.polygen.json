@@ -9,6 +9,7 @@
             "filename": "shape_polygen.go",
             "strict": false,
             "buildTag": "go1.20",
+            "typeNameMethod": "TypeName",
             "subtypes": {
                 "Circle": {
                     "name": "circle"

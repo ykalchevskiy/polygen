@@ -26,6 +26,10 @@
             "type": "string",
             "description": "Build constraint for all generated code (e.g. \"linux\", \"linux && amd64\")"
         },
+        "typeNameMethodByDefault": {
+            "type": "string",
+            "description": "Name for a generated subtype `<Name>() string` method returning the type name"
+        },
         "types": {
             "type": "array",
             "items": {
@@ -67,6 +71,10 @@
                     "buildTag": {
                         "type": "string",
                         "description": "Build constraint for this type (overrides global buildTag)"
+                    },
+                    "typeNameMethod": {
+                        "type": "string",
+                        "description": "Overrides typeNameMethodByDefault for this type; set to \"\" to explicitly disable"
                     },
                     "jsonVersion": {
                         "type": "string",

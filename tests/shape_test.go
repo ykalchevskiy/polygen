@@ -783,3 +783,24 @@ func TestShape(t *testing.T) {
 		}
 	})
 }
+
+func TestShapeTypeName(t *testing.T) {
+	tests := []struct {
+		name  string
+		shape IsShape
+		want  string
+	}{
+		{name: "value subtype", shape: Circle{}, want: "circle"},
+		{name: "value subtype used as pointer", shape: &Rectangle{}, want: "rectangle"},
+		{name: "pointer subtype", shape: &Polygon{}, want: "polygon"},
+		{name: "pointer subtype nil", shape: (*Group)(nil), want: "group"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.shape.(interface{ TypeName() string }).TypeName(); got != tt.want {
+				t.Errorf("TypeName() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}

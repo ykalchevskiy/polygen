@@ -26,6 +26,20 @@ var (
 {{- end}}
 )
 
+{{- if .TypeNameMethod}}
+{{- range .Types}}
+{{- if .IsPointer}}
+func (*{{.SubType}}) {{$.TypeNameMethod}}() string {
+	return "{{.TypeName}}"
+}
+{{- else}}
+func ({{.SubType}}) {{$.TypeNameMethod}}() string {
+	return "{{.TypeName}}"
+}
+{{- end}}
+{{- end}}
+{{- end}}
+
 // _{{.Type}}TypeRegistry maps concrete types to their type names.
 var _{{.Type}}TypeRegistry = map[reflect.Type]string{
 {{- range .Types}}

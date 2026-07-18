@@ -20,6 +20,22 @@ var (
 	_ IsShape = Rectangle{}
 )
 
+func (Circle) TypeName() string {
+	return "circle"
+}
+func (Empty) TypeName() string {
+	return "empty"
+}
+func (*Group) TypeName() string {
+	return "group"
+}
+func (*Polygon) TypeName() string {
+	return "polygon"
+}
+func (Rectangle) TypeName() string {
+	return "rectangle"
+}
+
 // _ShapeTypeRegistry maps concrete types to their type names.
 var _ShapeTypeRegistry = map[reflect.Type]string{
 	reflect.TypeOf((*Circle)(nil)).Elem():    "circle",
