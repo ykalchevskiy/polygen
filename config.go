@@ -26,6 +26,7 @@ type Config struct {
 	DefaultSubtypeName string
 	BuildTag           string
 	JSONVersion        string
+	TypeNameMethod     string
 }
 
 // TypeMapping represents a mapping between a concrete type and its JSON type name.
@@ -49,6 +50,8 @@ type FileConfig struct {
 	DefaultBuildTag string `json:"defaultBuildTag,omitempty"`
 	// JSONVersionByDefault determines the json version generation enabled by default (v1, v2, both)
 	JSONVersionByDefault string `json:"jsonVersionByDefault,omitempty"`
+	// TypeNameMethodByDefault is the default name for the generated per-subtype `<Name>() string` method
+	TypeNameMethodByDefault string `json:"typeNameMethodByDefault,omitempty"`
 }
 
 // FileTypeConfig represents configuration for a single polymorphic type.
@@ -75,6 +78,8 @@ type FileTypeConfig struct {
 	BuildTag string `json:"buildTag,omitempty"`
 	// JSONVersion enables generation of jsonv2 code for this type (v1, v2, both)
 	JSONVersion string `json:"jsonVersion,omitempty"`
+	// TypeNameMethod overrides TypeNameMethodByDefault for this type; set to "" to explicitly disable
+	TypeNameMethod *string `json:"typeNameMethod,omitempty"`
 }
 
 // FileSubtypeConfig represents configuration for a subtype.
@@ -87,13 +92,14 @@ type FileSubtypeConfig struct {
 
 func convertFileConfigToConfig(typeConfig *FileTypeConfig, config *FileConfig) *Config {
 	cfg := &Config{
-		Type:          typeConfig.Type,
-		Interface:     typeConfig.Interface,
-		Package:       typeConfig.Package,
-		Discriminator: typeConfig.Discriminator,
-		Strict:        config.StrictByDefault,
-		BuildTag:      config.DefaultBuildTag,
-		JSONVersion:   config.JSONVersionByDefault,
+		Type:           typeConfig.Type,
+		Interface:      typeConfig.Interface,
+		Package:        typeConfig.Package,
+		Discriminator:  typeConfig.Discriminator,
+		Strict:         config.StrictByDefault,
+		BuildTag:       config.DefaultBuildTag,
+		JSONVersion:    config.JSONVersionByDefault,
+		TypeNameMethod: config.TypeNameMethodByDefault,
 	}
 
 	if cfg.Discriminator == "" {
@@ -120,6 +126,10 @@ func convertFileConfigToConfig(typeConfig *FileTypeConfig, config *FileConfig) *
 		cfg.JSONVersion = JSONVersionV1
 	} else if cfg.JSONVersion != JSONVersionV1 && cfg.JSONVersion != JSONVersionV2 && cfg.JSONVersion != JSONVersionBoth {
 		cfg.JSONVersion = JSONVersionV1
+	}
+
+	if typeConfig.TypeNameMethod != nil {
+		cfg.TypeNameMethod = *typeConfig.TypeNameMethod
 	}
 
 	var defaultSubtypeName string

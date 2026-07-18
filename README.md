@@ -90,6 +90,7 @@ The JSON configuration file supports:
 - Global and per-subtype pointer mode settings
 - Global and per-type build tag constraints
 - Custom output paths relative to config file
+- Global and per-type generation of a per-subtype `<Name>() string` method
 
 ### Schema
 
@@ -100,6 +101,7 @@ The configuration follows this structure:
 - `defaultDiscriminator` (optional): Default JSON field name for type discrimination (default: "type")
 - `defaultBuildTag` (optional): Build constraint for all generated code (e.g., "linux" or "linux && amd64")
 - `jsonVersionByDefault` (optional): JSON library version to target by default (options: `v1` (default), `v2`, `both`)
+- `typeNameMethodByDefault` (optional): Name for a generated subtype `<Name>() string` method returning the type name
 - `types` (required): Array of type configurations:
   - `type` (required): Name of the polymorphic structure
   - `interface` (required): Name of the interface all subtypes implement
@@ -111,6 +113,7 @@ The configuration follows this structure:
   - `defaultSubtype` (optional): Default subtype to unmarshal into when the discriminator field is missing
   - `buildTag` (optional): Override build tag constraint for this type
   - `jsonVersion` (optional): JSON library version to target for this type (options: `v1` (default), `v2`, `both`)
+  - `typeNameMethod` (optional): Override `typeNameMethodByDefault` for this type; set to `""` to explicitly disable
   - `subtypes` (required): Map of Go type names to their configurations:
     - `name` (optional): JSON type name (defaults to subtype name in kebab-case)
     - `pointer` (optional): Use pointer for this type (defaults to `pointerByDefault`)

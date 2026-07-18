@@ -218,6 +218,33 @@ func Test_convertFileConfigToConfig(t *testing.T) {
 				JSONVersion: "v1",
 			},
 		},
+		{
+			name: "default typeNameMethod",
+			args: args{
+				typeConfig: &FileTypeConfig{
+					Type:      "Shape",
+					Interface: "Shape",
+					Package:   "main",
+					Subtypes: map[string]FileSubtypeConfig{
+						"Rectangle": {},
+					},
+				},
+				config: &FileConfig{
+					TypeNameMethodByDefault: "TypeName",
+				},
+			},
+			want: &Config{
+				Type:          "Shape",
+				Interface:     "Shape",
+				Package:       "main",
+				Discriminator: "type",
+				Types: []TypeMapping{
+					{SubType: "Rectangle", TypeName: "rectangle"},
+				},
+				JSONVersion:    "v1",
+				TypeNameMethod: "TypeName",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

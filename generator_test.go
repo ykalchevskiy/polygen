@@ -61,10 +61,11 @@ func TestGenerate(t *testing.T) {
 	t.Run("custom values", func(t *testing.T) {
 		subType1Name := "my-subtype-1"
 		config := FileConfig{
-			DefaultDiscriminator: "kind",
-			StrictByDefault:      true,
-			PointerByDefault:     true,
-			DefaultBuildTag:      "darwin",
+			DefaultDiscriminator:    "kind",
+			StrictByDefault:         true,
+			PointerByDefault:        true,
+			DefaultBuildTag:         "darwin",
+			TypeNameMethodByDefault: "GetTypeName",
 			Types: []FileTypeConfig{
 				{
 					Type:      "TestType",
@@ -107,6 +108,8 @@ func TestGenerate(t *testing.T) {
 			`reflect.TypeOf((*SubType1)(nil)):`,
 			`reflect.TypeOf((*SubType2)(nil)):`,
 			"decoder.DisallowUnknownFields()",
+			"func (*SubType1) GetTypeName() string {\n\treturn \"my-subtype-1\"\n}",
+			"func (*SubType2) GetTypeName() string {\n\treturn \"sub-type-2\"\n}",
 		}
 
 		for _, r := range required {
