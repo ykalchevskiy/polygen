@@ -35,7 +35,7 @@ Create a `.polygen.json` file in your project root:
 
 ```json
 {
-    "$schema": "https://raw.githubusercontent.com/ykalchevskiy/polygen/refs/tags/v1.1.0/schema.json",
+    "$schema": "https://raw.githubusercontent.com/ykalchevskiy/polygen/refs/tags/v1.2.0/schema.json",
     "types": [
         {
             "type": "Item",
