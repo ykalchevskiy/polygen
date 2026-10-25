@@ -1,7 +1,7 @@
 {
     "$schema": "https://raw.githubusercontent.com/ykalchevskiy/polygen/main/schema.json",
     "defaultJsonVersion": "v1",
-    "defaultBuildTag": "go1.20 && !go1.25",
+    "defaultBuildTag": "go1.20 && !goexperiment.jsonv2 && !go1.27",
     "types": [
         {
             "type": "Shape",
