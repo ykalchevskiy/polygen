@@ -122,9 +122,9 @@ func convertFileConfigToConfig(typeConfig *FileTypeConfig, config *FileConfig) *
 		cfg.JSONVersion = typeConfig.JSONVersion
 	}
 
-	if cfg.JSONVersion == "" {
+	if v := cfg.JSONVersion; v == "" {
 		cfg.JSONVersion = JSONVersionV1
-	} else if cfg.JSONVersion != JSONVersionV1 && cfg.JSONVersion != JSONVersionV2Experiment && cfg.JSONVersion != JSONVersionV2 {
+	} else if v != JSONVersionV1 && v != JSONVersionV2Experiment && v != JSONVersionV2 {
 		cfg.JSONVersion = JSONVersionV1
 	}
 
