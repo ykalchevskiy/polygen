@@ -106,7 +106,7 @@ and can be referenced from `.polygen.json` for editor validation and completion.
 - `pointerByDefault` (optional): Mark all subtypes as pointer mode by default
 - `defaultDiscriminator` (optional): Default JSON field name for type discrimination (default: "type")
 - `defaultBuildTag` (optional): Build constraint for all generated code (e.g., "linux" or "linux && amd64")
-- `typeNameMethodByDefault` (optional): Name for a generated subtype `<Name>() string` method returning the type name
+- `defaultTypeNameMethod` (optional): Name for a generated subtype `<Name>() string` method returning the type name
 - `defaultJsonVersion` (optional): Default JSON library version to target (options: `v1` (default), `v2experiment`, `v2`)
 
     * `v2experiment` generates code for Go 1.25 and 1.26 and requires building with `GOEXPERIMENT=jsonv2`.
@@ -124,7 +124,7 @@ and can be referenced from `.polygen.json` for editor validation and completion.
   - `defaultSubtype` (optional): Go subtype key from `subtypes` to use when the discriminator field is missing
   - `buildTag` (optional): Override `defaultBuildTag` for this type
   - `jsonVersion` (optional): JSON library version to target for this type (options: `v1` (default), `v2experiment`, `v2`)
-  - `typeNameMethod` (optional): Override `typeNameMethodByDefault` for this type; set to `""` to explicitly disable
+  - `typeNameMethod` (optional): Override `defaultTypeNameMethod` for this type; set to `""` to explicitly disable
   - `subtypes` (required): Map of Go type names to their configurations:
     - `name` (optional): JSON discriminator value (defaults to the Go subtype name converted to kebab-case)
     - `pointer` (optional): Use pointer for this type (defaults to `pointerByDefault`)

@@ -61,11 +61,11 @@ func TestGenerate(t *testing.T) {
 	t.Run("custom values", func(t *testing.T) {
 		subType1Name := "my-subtype-1"
 		config := FileConfig{
-			DefaultDiscriminator:    "kind",
-			StrictByDefault:         true,
-			PointerByDefault:        true,
-			DefaultBuildTag:         "darwin",
-			TypeNameMethodByDefault: "GetTypeName",
+			DefaultDiscriminator:  "kind",
+			StrictByDefault:       true,
+			PointerByDefault:      true,
+			DefaultBuildTag:       "darwin",
+			DefaultTypeNameMethod: "GetTypeName",
 			Types: []FileTypeConfig{
 				{
 					Type:      "TestType",
