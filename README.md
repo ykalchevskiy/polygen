@@ -5,6 +5,10 @@
 
 A Go code generator for creating polymorphic data structures with JSON serialization support.
 
+The tool generates Go code for handling polymorphic types in JSON,
+allowing different concrete types to be serialized and
+deserialized based on a type discriminator field.
+
 ## Example
 
 Given the following Go code:
@@ -94,26 +98,35 @@ The JSON configuration file supports:
 
 ### Schema
 
-The configuration follows this structure:
+Per-type settings override their corresponding global defaults. If neither is set,
+polygen uses the defaults listed below. The JSON schema is available in [schema.json](./schema.json)
+and can be referenced from `.polygen.json` for editor validation and completion.
 
 - `strictByDefault` (optional): Enable strict mode by default (does not apply to jsonv2)
 - `pointerByDefault` (optional): Mark all subtypes as pointer mode by default
 - `defaultDiscriminator` (optional): Default JSON field name for type discrimination (default: "type")
 - `defaultBuildTag` (optional): Build constraint for all generated code (e.g., "linux" or "linux && amd64")
-- `defaultJsonVersion` (optional): Default JSON library version to target (options: `v1` (default), `v2experiment`, `v2`)
 - `typeNameMethodByDefault` (optional): Name for a generated subtype `<Name>() string` method returning the type name
+- `defaultJsonVersion` (optional): Default JSON library version to target (options: `v1` (default), `v2experiment`, `v2`)
+
+    * `v2experiment` generates code for Go 1.25 and 1.26 and requires building with `GOEXPERIMENT=jsonv2`.
+
+    * `v2` generates code for Go 1.27 and later.
+
 - `types` (required): Array of type configurations:
   - `type` (required): Name of the polymorphic structure
   - `interface` (required): Name of the interface all subtypes implement
   - `package` (required): Package name for generated code
   - `discriminator` (optional): Override default JSON field name
   - `directory` (optional): Output directory path relative to config file
-  - `filename` (optional): Output filename (defaults to <type>_polygen.go)
+  - `filename` (optional): Output filename (defaults to `<type_in_snake_case>_polygen.go`)
   - `strict` (optional): Override strict mode for this type (does not apply to jsonv2)
-  - `defaultSubtype` (optional): Default subtype to unmarshal into when the discriminator field is missing
-  - `buildTag` (optional): Override build tag constraint for this type
+  - `defaultSubtype` (optional): Go subtype key from `subtypes` to use when the discriminator field is missing
+  - `buildTag` (optional): Override `defaultBuildTag` for this type
   - `jsonVersion` (optional): JSON library version to target for this type (options: `v1` (default), `v2experiment`, `v2`)
   - `typeNameMethod` (optional): Override `typeNameMethodByDefault` for this type; set to `""` to explicitly disable
   - `subtypes` (required): Map of Go type names to their configurations:
-    - `name` (optional): JSON type name (defaults to subtype name in kebab-case)
+    - `name` (optional): JSON discriminator value (defaults to the Go subtype name converted to kebab-case)
     - `pointer` (optional): Use pointer for this type (defaults to `pointerByDefault`)
+
+When `defaultSubtype` is set, its value is the Go subtype key in `subtypes`, not the subtype's JSON `name`.
