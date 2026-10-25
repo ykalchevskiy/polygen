@@ -7,10 +7,15 @@ linters:
     - err113
     - errorlint
     - exhaustruct
+    - exhaustruct_v5
     - gomodguard
     - gosec
     - noinlineerr
     - wsl
+
+    # because of go1.20
+    - copyloopvar
+    - intrange
 
   exclusions:
     paths:
