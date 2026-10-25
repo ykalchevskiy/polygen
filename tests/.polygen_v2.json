@@ -1,14 +1,13 @@
 {
     "$schema": "https://raw.githubusercontent.com/ykalchevskiy/polygen/main/schema.json",
-    "jsonVersionByDefault": "both",
+    "defaultJsonVersion": "v2",
     "types": [
         {
             "type": "Shape",
             "interface": "IsShape",
             "package": "tests",
-            "filename": "shape_polygen.go",
+            "filename": "shape_v2_polygen.go",
             "strict": false,
-            "buildTag": "go1.20",
             "typeNameMethod": "TypeName",
             "subtypes": {
                 "Circle": {
@@ -34,7 +33,7 @@
             "type": "ShapeStrict",
             "interface": "IsShape",
             "package": "tests",
-            "filename": "shape_strict_polygen.go",
+            "filename": "shape_strict_v2_polygen.go",
             "strict": true,
             "subtypes": {
                 "Circle": {
@@ -60,7 +59,7 @@
             "type": "ShapeDefault",
             "interface": "IsShape",
             "package": "tests",
-            "filename": "shape_default_polygen.go",
+            "filename": "shape_default_v2_polygen.go",
             "defaultSubtype": "Circle",
             "subtypes": {
                 "Circle": {

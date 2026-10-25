@@ -16,10 +16,10 @@
             "description": "Default JSON field name to distinguish types (default: \"type\")",
             "default": "type"
         },
-        "jsonVersionByDefault": {
+        "defaultJsonVersion": {
             "type": "string",
-            "enum": ["v1", "v2", "both"],
-            "description": "JSON library version to target by default (v1, v2, or both)",
+            "enum": ["v1", "v2experiment", "v2"],
+            "description": "Default JSON library version to target (v1, v2experiment, v2)",
             "default": "v1"
         },
         "defaultBuildTag": {
@@ -78,9 +78,8 @@
                     },
                     "jsonVersion": {
                         "type": "string",
-                        "enum": ["v1", "v2", "both"],
-                        "description": "JSON library version to target for this type (v1, v2, or both)",
-                        "default": "v1"
+                        "enum": ["v1", "v2experiment", "v2"],
+                        "description": "JSON library version to target for this type (v1, v2experiment, or v2,; overrides defaultJSONVersion)"
                     },
                     "subtypes": {
                         "type": "object",

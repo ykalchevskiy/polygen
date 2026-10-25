@@ -100,7 +100,7 @@ The configuration follows this structure:
 - `pointerByDefault` (optional): Mark all subtypes as pointer mode by default
 - `defaultDiscriminator` (optional): Default JSON field name for type discrimination (default: "type")
 - `defaultBuildTag` (optional): Build constraint for all generated code (e.g., "linux" or "linux && amd64")
-- `jsonVersionByDefault` (optional): JSON library version to target by default (options: `v1` (default), `v2`, `both`)
+- `defaultJsonVersion` (optional): Default JSON library version to target (options: `v1` (default), `v2experiment`, `v2`)
 - `typeNameMethodByDefault` (optional): Name for a generated subtype `<Name>() string` method returning the type name
 - `types` (required): Array of type configurations:
   - `type` (required): Name of the polymorphic structure
@@ -112,7 +112,7 @@ The configuration follows this structure:
   - `strict` (optional): Override strict mode for this type (does not apply to jsonv2)
   - `defaultSubtype` (optional): Default subtype to unmarshal into when the discriminator field is missing
   - `buildTag` (optional): Override build tag constraint for this type
-  - `jsonVersion` (optional): JSON library version to target for this type (options: `v1` (default), `v2`, `both`)
+  - `jsonVersion` (optional): JSON library version to target for this type (options: `v1` (default), `v2experiment`, `v2`)
   - `typeNameMethod` (optional): Override `typeNameMethodByDefault` for this type; set to `""` to explicitly disable
   - `subtypes` (required): Map of Go type names to their configurations:
     - `name` (optional): JSON type name (defaults to subtype name in kebab-case)
