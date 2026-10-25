@@ -1,3 +1,4 @@
+// Polygen is a code generator for creating polymorphic data structures with JSON serialization support.
 package main
 
 import (
