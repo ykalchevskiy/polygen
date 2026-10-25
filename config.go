@@ -37,13 +37,13 @@ type TypeMapping struct {
 
 // FileConfig, FileTypeConfig, and FileSubtypeConfig represent the external JSON configuration.
 type FileConfig struct {
-	Types                   []FileTypeConfig `json:"types"`
-	StrictByDefault         bool             `json:"strictByDefault,omitempty"`
-	PointerByDefault        bool             `json:"pointerByDefault,omitempty"`
-	DefaultDiscriminator    string           `json:"defaultDiscriminator,omitempty"`
-	DefaultBuildTag         string           `json:"defaultBuildTag,omitempty"`
-	DefaultJSONVersion      string           `json:"defaultJsonVersion,omitempty"`
-	TypeNameMethodByDefault string           `json:"typeNameMethodByDefault,omitempty"`
+	Types                 []FileTypeConfig `json:"types"`
+	StrictByDefault       bool             `json:"strictByDefault,omitempty"`
+	PointerByDefault      bool             `json:"pointerByDefault,omitempty"`
+	DefaultDiscriminator  string           `json:"defaultDiscriminator,omitempty"`
+	DefaultBuildTag       string           `json:"defaultBuildTag,omitempty"`
+	DefaultJSONVersion    string           `json:"defaultJsonVersion,omitempty"`
+	DefaultTypeNameMethod string           `json:"defaultTypeNameMethod,omitempty"`
 }
 
 type FileTypeConfig struct {
@@ -75,7 +75,7 @@ func convertFileConfigToConfig(typeConfig *FileTypeConfig, config *FileConfig) *
 		Strict:         config.StrictByDefault,
 		BuildTag:       config.DefaultBuildTag,
 		JSONVersion:    config.DefaultJSONVersion,
-		TypeNameMethod: config.TypeNameMethodByDefault,
+		TypeNameMethod: config.DefaultTypeNameMethod,
 	}
 
 	if cfg.Discriminator == "" {

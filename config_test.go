@@ -219,7 +219,7 @@ func Test_convertFileConfigToConfig(t *testing.T) {
 			},
 		},
 		{
-			name: "default typeNameMethod",
+			name: "default type name method",
 			args: args{
 				typeConfig: &FileTypeConfig{
 					Type:      "Shape",
@@ -230,7 +230,7 @@ func Test_convertFileConfigToConfig(t *testing.T) {
 					},
 				},
 				config: &FileConfig{
-					TypeNameMethodByDefault: "TypeName",
+					DefaultTypeNameMethod: "TypeName",
 				},
 			},
 			want: &Config{
