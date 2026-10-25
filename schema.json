@@ -58,11 +58,11 @@
                     },
                     "filename": {
                         "type": "string",
-                        "description": "Output filename (defaults to <type_snake_case>_polygen.go)"
+                        "description": "Output filename (defaults to the type name converted to snake_case, followed by _polygen.go)"
                     },
                     "strict": {
-                        "type": "boolean",
-                        "description": "Enable strict JSON unmarshaling for this type (does not apply to jsonv2)"
+                        "type": ["null", "boolean"],
+                        "description": "Enable strict JSON unmarshaling for this type (does not apply to jsonv2), overrides strictByDefault (optional)"
                     },
                     "defaultSubtype": {
                         "type": "string",
@@ -70,7 +70,7 @@
                     },
                     "buildTag": {
                         "type": "string",
-                        "description": "Build constraint for this type (overrides global buildTag)"
+                        "description": "Build constraint for this type (overrides defaultBuildTag)"
                     },
                     "typeNameMethod": {
                         "type": "string",
@@ -79,7 +79,7 @@
                     "jsonVersion": {
                         "type": "string",
                         "enum": ["v1", "v2experiment", "v2"],
-                        "description": "JSON library version to target for this type (v1, v2experiment, or v2,; overrides defaultJSONVersion)"
+                        "description": "JSON library version to target for this type (v1, v2experiment, or v2; overrides defaultJsonVersion)"
                     },
                     "subtypes": {
                         "type": "object",
@@ -89,11 +89,11 @@
                             "properties": {
                                 "name": {
                                     "type": "string",
-                                    "description": "JSON type name (defaults to subtype name in snake_case)"
+                                    "description": "JSON discriminator value (defaults to the Go subtype name converted to kebab-case)"
                                 },
                                 "pointer": {
-                                    "type": "boolean",
-                                    "description": "Use pointer for this type",
+                                    "type": ["null", "boolean"],
+                                    "description": "Use pointer for this type, overriding pointerByDefault (optional)",
                                     "default": false
                                 }
                             }

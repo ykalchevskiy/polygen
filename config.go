@@ -15,7 +15,7 @@ const (
 	JSONVersionV2           = "v2"
 )
 
-// Config represents the internal configuration used by the generator.
+// Config and TypeMapping hold normalized internal generator state.
 type Config struct {
 	Type               string
 	Interface          string
@@ -29,65 +29,41 @@ type Config struct {
 	TypeNameMethod     string
 }
 
-// TypeMapping represents a mapping between a concrete type and its JSON type name.
 type TypeMapping struct {
 	SubType   string
 	TypeName  string
 	IsPointer bool
 }
 
-// FileConfig represents the configuration file structure.
+// FileConfig, FileTypeConfig, and FileSubtypeConfig represent the external JSON configuration.
 type FileConfig struct {
-	// Types is a list of type configurations to generate
-	Types []FileTypeConfig `json:"types"`
-	// StrictByDefault determines if strict mode should be enabled by default for all types (does not apply to jsonv2)
-	StrictByDefault bool `json:"strictByDefault,omitempty"`
-	// PointerByDefault determines if pointer mode should be enabled by default for all subtypes
-	PointerByDefault bool `json:"pointerByDefault,omitempty"`
-	// DefaultDiscriminator is the default JSON field name to distinguish types
-	DefaultDiscriminator string `json:"defaultDiscriminator,omitempty"`
-	// DefaultBuildTag is the build constraint for generated code
-	DefaultBuildTag string `json:"defaultBuildTag,omitempty"`
-	// DefaultJSONVersion determines the JSON version generation enabled (v1, v2experiment, v2)
-	DefaultJSONVersion string `json:"defaultJsonVersion,omitempty"`
-	// TypeNameMethodByDefault is the default name for the generated per-subtype `<Name>() string` method
-	TypeNameMethodByDefault string `json:"typeNameMethodByDefault,omitempty"`
+	Types                   []FileTypeConfig `json:"types"`
+	StrictByDefault         bool             `json:"strictByDefault,omitempty"`
+	PointerByDefault        bool             `json:"pointerByDefault,omitempty"`
+	DefaultDiscriminator    string           `json:"defaultDiscriminator,omitempty"`
+	DefaultBuildTag         string           `json:"defaultBuildTag,omitempty"`
+	DefaultJSONVersion      string           `json:"defaultJsonVersion,omitempty"`
+	TypeNameMethodByDefault string           `json:"typeNameMethodByDefault,omitempty"`
 }
 
-// FileTypeConfig represents configuration for a single polymorphic type.
 type FileTypeConfig struct {
-	// Type is the name of the polymorphic structure to generate
-	Type string `json:"type"`
-	// Interface is the name of the interface all subtypes implement
-	Interface string `json:"interface"`
-	// Package is the package name for the generated file
-	Package string `json:"package"`
-	// Subtypes maps Go types to their configurations
-	Subtypes map[string]FileSubtypeConfig `json:"subtypes"`
-	// Directory is the output directory path, relative to the config file
-	Directory string `json:"directory,omitempty"`
-	// Filename is the output filename, defaults to <type>_polygen.go in snake_case
-	Filename string `json:"filename,omitempty"`
-	// Discriminator is the JSON field name to distinguish types
-	Discriminator string `json:"discriminator,omitempty"`
-	// Strict enables strict JSON unmarshaling for this type (does not apply to jsonv2)
-	Strict *bool `json:"strict,omitempty"`
-	// DefaultSubtype is the default subtype to use when the discriminator is missing
-	DefaultSubtype string `json:"defaultSubtype,omitempty"`
-	// BuildTag is the build constraint for this type
-	BuildTag string `json:"buildTag,omitempty"`
-	// JSONVersion enables generation of jsonv2 code for this type (v1, v2experiment, v2)
-	JSONVersion string `json:"jsonVersion,omitempty"`
-	// TypeNameMethod overrides TypeNameMethodByDefault for this type; set to "" to explicitly disable
-	TypeNameMethod *string `json:"typeNameMethod,omitempty"`
+	Type           string                       `json:"type"`
+	Interface      string                       `json:"interface"`
+	Package        string                       `json:"package"`
+	Subtypes       map[string]FileSubtypeConfig `json:"subtypes"`
+	Directory      string                       `json:"directory,omitempty"`
+	Filename       string                       `json:"filename,omitempty"`
+	Discriminator  string                       `json:"discriminator,omitempty"`
+	Strict         *bool                        `json:"strict,omitempty"`
+	DefaultSubtype string                       `json:"defaultSubtype,omitempty"`
+	BuildTag       string                       `json:"buildTag,omitempty"`
+	JSONVersion    string                       `json:"jsonVersion,omitempty"`
+	TypeNameMethod *string                      `json:"typeNameMethod,omitempty"`
 }
 
-// FileSubtypeConfig represents configuration for a subtype.
 type FileSubtypeConfig struct {
-	// Name is the JSON type name, defaults to the subtype name in snake_case if not specified
-	Name *string `json:"name,omitempty"`
-	// Pointer indicates if this type should be used as a pointer
-	Pointer *bool `json:"pointer,omitempty"`
+	Name    *string `json:"name,omitempty"`
+	Pointer *bool   `json:"pointer,omitempty"`
 }
 
 func convertFileConfigToConfig(typeConfig *FileTypeConfig, config *FileConfig) *Config {
