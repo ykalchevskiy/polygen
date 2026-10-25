@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
 func main() {
@@ -43,16 +42,7 @@ func run(configPath string) error {
 		}
 
 		switch cfg.JSONVersion {
-		case JSONVersionBoth:
-			if err := generateAndWrite(cfg, generate, outputPath); err != nil {
-				return fmt.Errorf("v1: %v", err)
-			}
-
-			outputPathV2 := strings.TrimSuffix(outputPath, ".go") + "_jsonv2.go"
-			if err := generateAndWrite(cfg, generateJSONV2, outputPathV2); err != nil {
-				return fmt.Errorf("v2: %v", err)
-			}
-		case JSONVersionV2:
+		case JSONVersionV2Experiment, JSONVersionV2:
 			if err := generateAndWrite(cfg, generateJSONV2, outputPath); err != nil {
 				return fmt.Errorf("v2: %v", err)
 			}

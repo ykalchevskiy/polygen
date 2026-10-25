@@ -1,6 +1,8 @@
 package tests
 
-//go:generate go run ..
+//go:generate go run .. -config=.polygen_v1.json
+//go:generate go run .. -config=.polygen_v2experiment.json
+//go:generate go run .. -config=.polygen_v2.json
 
 type IsShape interface {
 	isShape()

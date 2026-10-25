@@ -1,0 +1,85 @@
+{
+    "$schema": "https://raw.githubusercontent.com/ykalchevskiy/polygen/main/schema.json",
+    "defaultJsonVersion": "v2experiment",
+    "types": [
+        {
+            "type": "Shape",
+            "interface": "IsShape",
+            "package": "tests",
+            "filename": "shape_v2experiment_polygen.go",
+            "strict": false,
+            "typeNameMethod": "TypeName",
+            "subtypes": {
+                "Circle": {
+                    "name": "circle"
+                },
+                "Rectangle": {
+                    "name": "rectangle"
+                },
+                "Polygon": {
+                    "name": "polygon",
+                    "pointer": true
+                },
+                "Group": {
+                    "name": "group",
+                    "pointer": true
+                },
+                "Empty": {
+                    "name": "empty"
+                }
+            }
+        },
+        {
+            "type": "ShapeStrict",
+            "interface": "IsShape",
+            "package": "tests",
+            "filename": "shape_strict_v2experiment_polygen.go",
+            "strict": true,
+            "subtypes": {
+                "Circle": {
+                    "name": "circle"
+                },
+                "Rectangle": {
+                    "name": "rectangle"
+                },
+                "Polygon": {
+                    "name": "polygon",
+                    "pointer": true
+                },
+                "Group": {
+                    "name": "group",
+                    "pointer": true
+                },
+                "Empty": {
+                    "name": "empty"
+                }
+            }
+        },
+        {
+            "type": "ShapeDefault",
+            "interface": "IsShape",
+            "package": "tests",
+            "filename": "shape_default_v2experiment_polygen.go",
+            "defaultSubtype": "Circle",
+            "subtypes": {
+                "Circle": {
+                    "name": "circle"
+                },
+                "Rectangle": {
+                    "name": "rectangle"
+                },
+                "Polygon": {
+                    "name": "polygon",
+                    "pointer": true
+                },
+                "Group": {
+                    "name": "group",
+                    "pointer": true
+                },
+                "Empty": {
+                    "name": "empty"
+                }
+            }
+        }
+    ]
+}

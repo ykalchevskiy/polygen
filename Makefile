@@ -2,12 +2,12 @@
 .PHONY: fmt lint generate test test-coverage
 
 fmt:
-	go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2 fmt
-	GOEXPERIMENT=jsonv2 go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2 fmt
+	go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.15.0 fmt
+	GOEXPERIMENT=jsonv2 go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.15.0 fmt
 
 lint:
-	go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2 run
-	GOEXPERIMENT=jsonv2 go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2 run
+	go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.15.0 run
+	GOEXPERIMENT=jsonv2 go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.15.0 run
 
 generate:
 	@go generate ./...

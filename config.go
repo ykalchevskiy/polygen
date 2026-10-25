@@ -10,9 +10,9 @@ import (
 const defaultDiscriminator = "type"
 
 const (
-	JSONVersionV1   = "v1"
-	JSONVersionV2   = "v2"
-	JSONVersionBoth = "both"
+	JSONVersionV1           = "v1"
+	JSONVersionV2Experiment = "v2experiment"
+	JSONVersionV2           = "v2"
 )
 
 // Config represents the internal configuration used by the generator.
@@ -48,8 +48,8 @@ type FileConfig struct {
 	DefaultDiscriminator string `json:"defaultDiscriminator,omitempty"`
 	// DefaultBuildTag is the build constraint for generated code
 	DefaultBuildTag string `json:"defaultBuildTag,omitempty"`
-	// JSONVersionByDefault determines the json version generation enabled by default (v1, v2, both)
-	JSONVersionByDefault string `json:"jsonVersionByDefault,omitempty"`
+	// DefaultJSONVersion determines the JSON version generation enabled (v1, v2experiment, v2)
+	DefaultJSONVersion string `json:"defaultJsonVersion,omitempty"`
 	// TypeNameMethodByDefault is the default name for the generated per-subtype `<Name>() string` method
 	TypeNameMethodByDefault string `json:"typeNameMethodByDefault,omitempty"`
 }
@@ -76,7 +76,7 @@ type FileTypeConfig struct {
 	DefaultSubtype string `json:"defaultSubtype,omitempty"`
 	// BuildTag is the build constraint for this type
 	BuildTag string `json:"buildTag,omitempty"`
-	// JSONVersion enables generation of jsonv2 code for this type (v1, v2, both)
+	// JSONVersion enables generation of jsonv2 code for this type (v1, v2experiment, v2)
 	JSONVersion string `json:"jsonVersion,omitempty"`
 	// TypeNameMethod overrides TypeNameMethodByDefault for this type; set to "" to explicitly disable
 	TypeNameMethod *string `json:"typeNameMethod,omitempty"`
@@ -98,7 +98,7 @@ func convertFileConfigToConfig(typeConfig *FileTypeConfig, config *FileConfig) *
 		Discriminator:  typeConfig.Discriminator,
 		Strict:         config.StrictByDefault,
 		BuildTag:       config.DefaultBuildTag,
-		JSONVersion:    config.JSONVersionByDefault,
+		JSONVersion:    config.DefaultJSONVersion,
 		TypeNameMethod: config.TypeNameMethodByDefault,
 	}
 
@@ -122,9 +122,9 @@ func convertFileConfigToConfig(typeConfig *FileTypeConfig, config *FileConfig) *
 		cfg.JSONVersion = typeConfig.JSONVersion
 	}
 
-	if cfg.JSONVersion == "" {
+	if v := cfg.JSONVersion; v == "" {
 		cfg.JSONVersion = JSONVersionV1
-	} else if cfg.JSONVersion != JSONVersionV1 && cfg.JSONVersion != JSONVersionV2 && cfg.JSONVersion != JSONVersionBoth {
+	} else if v != JSONVersionV1 && v != JSONVersionV2Experiment && v != JSONVersionV2 {
 		cfg.JSONVersion = JSONVersionV1
 	}
 

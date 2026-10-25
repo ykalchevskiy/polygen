@@ -219,6 +219,7 @@ func (v *{{.Type}}) UnmarshalJSON(data []byte) error {
 				if currTypeName == "{{.TypeName}}" {
 					vv = v.{{$.Interface}}.(*{{.SubType}})
 				}
+
 				if err := json.Unmarshal(data, &vv); err != nil {
 					return fmt.Errorf("polygen: cannot unmarshal {{.SubType}} for {{$.Type}}: %v", err)
 				}

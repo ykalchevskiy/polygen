@@ -178,7 +178,7 @@ func Test_convertFileConfigToConfig(t *testing.T) {
 					},
 				},
 				config: &FileConfig{
-					JSONVersionByDefault: "both",
+					DefaultJSONVersion: "v1",
 				},
 			},
 			want: &Config{
@@ -204,7 +204,7 @@ func Test_convertFileConfigToConfig(t *testing.T) {
 					},
 				},
 				config: &FileConfig{
-					JSONVersionByDefault: "invalid-version",
+					DefaultJSONVersion: "invalid-version",
 				},
 			},
 			want: &Config{
